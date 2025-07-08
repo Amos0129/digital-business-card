@@ -1,0 +1,1 @@
+測試時如需引用 spring 相關物件請繼承 Starter.UnitTester  

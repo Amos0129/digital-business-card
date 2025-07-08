@@ -1,0 +1,13 @@
+.login {
+  &-bg {
+    background-image: url(../../img/login-background.png);
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+  }
+}

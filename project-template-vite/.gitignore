@@ -1,0 +1,42 @@
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/build/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+
+### custom ignore ###
+/bin
+/.gradle
+out
+.DS_Store
+node_modules
+static
+OtakuTest.java
+/file-lab
+debug.log
+.eslintcache
+build
+application-local.properties
+/lockfile
+.*~

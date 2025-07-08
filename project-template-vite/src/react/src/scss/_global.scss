@@ -1,0 +1,31 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  font-size: 1rem;
+  font-family: Segoe UI, Helvetica, Liberation Sans, 微軟正黑體, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+#root {
+  height: inherit;
+  font-family: Segoe UI, Helvetica, Liberation Sans, 微軟正黑體, sans-serif;
+}
+
+a {
+  text-decoration: none;
+}
+
+.c-pointer {
+  cursor: pointer;
+}
+
+.c-default {
+  cursor: default;
+}
+
+.c-not-allow {
+  cursor: not-allowed;
+}

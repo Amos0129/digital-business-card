@@ -1,0 +1,202 @@
+import java.nio.file.Paths
+import java.util.stream.Collectors
+
+plugins {
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'war'
+}
+
+def jackson_version = "2.18.3"
+def lombok_version = "1.18.36"
+
+group = 'com.emfabro'
+version = '1.0.4'
+description = 'project-template-with-permission'
+
+configurations {
+    developmentOnly
+
+    mockitoAgent
+
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+dependencies {
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-data-jpa'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security'
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    developmentOnly group: 'org.springframework.boot', name: 'spring-boot-devtools'
+
+    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
+
+    implementation group: 'org.apache.tomcat', name: 'tomcat-dbcp', version: '11.0.6'
+
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.7.5'
+    implementation group: 'org.mybatis', name: 'mybatis', version: '3.5.19'
+    implementation group: 'org.mybatis.spring.boot', name: 'mybatis-spring-boot-starter', version: '3.0.4'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jackson_version
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jackson_version
+    implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-csv', version: jackson_version
+
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.17.0'
+    implementation group: 'org.apache.commons', name: 'commons-collections4', version: '4.4'
+    implementation group: 'org.apache.httpcomponents.client5', name: 'httpclient5', version: '5.4.3'
+    implementation group: 'org.apache.commons', name: 'commons-csv', version: '1.14.0'
+    implementation group: 'commons-codec', name: 'commons-codec', version: '1.18.0'
+
+    implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '5.4.1'
+
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk18on', version: '1.80'
+
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: lombok_version
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombok_version
+
+    testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombok_version
+    testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombok_version
+
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.12.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    mockitoAgent("org.mockito:mockito-core:5.17.0") {
+        transitive = false
+    }
+}
+
+dependencyLocking {
+    lockAllConfigurations()
+    lockFile = file("$projectDir/lockfile/gradle.lockfile")
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs = ['-XX:+EnableDynamicAgentLoading', '-Xshare:off', "-javaagent:${configurations.mockitoAgent.asPath}"]
+}
+
+build {
+    version ""
+}
+
+[
+    [name: "dev",
+     ignoreClass: [],
+     ignoreJar: []],
+    [name: "local",
+     ignoreClass: [],
+     ignoreJar: []],
+    [name: "test",
+     ignoreClass: ["com/emfabro/system/config/JdbcDevCQRSConfig.java",
+                   "com/emfabro/system/config/SwaggerConfig.java"],
+     ignoreJar: ["tomcat-*.jar",
+                 "springfox-*.jar",
+                 "swagger-*.jar"]],
+    [name: "uat",
+     ignoreClass: ["com/emfabro/system/config/JdbcDevCQRSConfig.java",
+                   "com/emfabro/system/config/SwaggerConfig.java"],
+     ignoreJar: ["tomcat-*.jar",
+                 "springfox-*.jar",
+                 "swagger-*.jar"]],
+    [name: "prod",
+     ignoreClass: ["com/emfabro/system/config/JdbcDevCQRSConfig.java",
+                   "com/emfabro/system/config/SwaggerConfig.java"],
+     ignoreJar: ["tomcat-*.jar",
+                 "springfox-*.jar",
+                 "swagger-*.jar"]]
+].each {
+    createRunTask(it.name)
+    createWarTask(it.name, it.ignoreClass, it.ignoreJar)
+}
+
+void createRunTask(String profile) {
+    task(dependsOn: bootRun, group: "run",
+         "run-$profile") { runTask ->
+        gradle.taskGraph.whenReady { graph ->
+            if (graph.hasTask(runTask)) {
+                bootRun.args = ["--spring.profiles.active=" + profile]
+                bootRun.jvmArgs = ["-Dorg.gradle.debug=true-Dfile.encoding=UTF-8"]
+            }
+        }
+    }
+}
+
+void createWarTask(String profile, List<String> ignoreClasses, List<String> ignoreJars) {
+    task(type: War, group: 'war', "war-$profile") { runTask ->
+        gradle.taskGraph.whenReady { graph ->
+            if (graph.hasTask(runTask)) {
+                test.enabled = false
+
+                updateFront()
+
+                List<String> ignoreFiles = getExcludeProperties(profile)
+                ignoreFiles.addAll(ignoreJars)
+                ignoreFiles.each { jar -> rootSpec.exclude("**/$jar") }
+                excludeClasses(ignoreClasses)
+
+                ant.propertyfile(file: "./src/main/resources/application.properties") {
+                    entry(key: "spring.profiles.active", value: profile)
+                }
+            }
+        }
+    }
+}
+
+void updateFront() {
+    delete("./src/main/resources/static/")
+
+    copy {
+        from "./src/react/build/."
+        into "./src/main/resources/static/."
+    }
+}
+
+static List<String> getExcludeProperties(String profile) {
+    return Arrays.stream(Paths.get("src/main/resources").toFile().listFiles())
+                 .filter({ file ->
+                     file.name.contains(".properties") &&
+                         [profile, "application.properties"].
+                             every { !file.name.contains(it) }
+                 })
+                 .map({ file -> file.name })
+                 .collect(Collectors.toList())
+}
+
+void excludeClasses(List<String> excludeClasses) {
+    sourceSets {
+        main {
+            java {
+                excludeClasses.each {
+                    exclude it
+                }
+            }
+        }
+    }
+}

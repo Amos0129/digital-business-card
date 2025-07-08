@@ -1,0 +1,13 @@
+package com.emfabro.template.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class CardGroupDto {
+    private Integer groupId;
+    private String groupName;
+}

@@ -1,0 +1,17 @@
+{
+  "standard.autoFixOnSave": true,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "javascript.format.insertSpaceBeforeFunctionParenthesis": true,
+  "javascript.format.insertSpaceAfterConstructor": true,
+  "search.exclude": {
+    ".eslintcache": true,
+    "**/build": true,
+    "package-lock.json": true
+  },
+  "javascript.validate.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.eol": "\r\n"
+}
