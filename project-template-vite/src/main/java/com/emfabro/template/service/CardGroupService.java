@@ -8,6 +8,7 @@ import com.emfabro.template.domain.entity.CardGroup;
 import com.emfabro.template.domain.entity.Group;
 import com.emfabro.template.dto.CardDetailDto;
 import com.emfabro.template.dto.CardGroupDto;
+import com.emfabro.template.dto.CardWithGroupDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -25,8 +26,13 @@ public class CardGroupService {
     public CardGroupDto getGroupOfCardForUser(Integer userId, Integer cardId) {
         List<CardGroup> groups = cardGroupJpa.findByCardAndUser(cardId, userId);
 
+        // if (groups.isEmpty()) {
+        //     throw new RuntimeException("找不到這張卡在使用者的群組中");
+        // }
+
+        // ✅ 改成這樣，讓它回傳 null（表示未加入任何群組）
         if (groups.isEmpty()) {
-            throw new RuntimeException("找不到這張卡在使用者的群組中");
+            return null;
         }
 
         Group group = groups.get(0).getGroup();
@@ -49,6 +55,7 @@ public class CardGroupService {
         CardGroup newRelation = new CardGroup();
         newRelation.setCard(card);
         newRelation.setGroup(group);
+        newRelation.setUser(group.getUser());
 
         cardGroupJpa.save(newRelation);
     }
@@ -66,6 +73,7 @@ public class CardGroupService {
         CardGroup cardGroup = new CardGroup();
         cardGroup.setCard(card);
         cardGroup.setGroup(group);
+        cardGroup.setUser(group.getUser()); // ✅ 補上這一行：設定持有這張卡的人
 
         return cardGroupJpa.save(cardGroup);
     }
@@ -88,10 +96,10 @@ public class CardGroupService {
         return cardGroupJpa.findByGroup(group);
     }
 
-    public List<CardDetailDto> getCardDetailsByUser(Integer userId) {
-        List<CardGroup> cardGroups = cardGroupJpa.findByGroup_User_Id(userId);
+    public List<CardWithGroupDto> getCardDetailsByUser(Integer userId) {
+        List<CardGroup> cardGroups = cardGroupJpa.findCardGroupsByUserId(userId); // 改成你剛加的！
         return cardGroups.stream()
-                         .map(cg -> CardDetailDto.fromEntity(cg.getCard(), cg.getGroup()))
+                         .map(cg -> CardWithGroupDto.from(cg.getCard(), cg.getGroup()))
                          .toList();
     }
 

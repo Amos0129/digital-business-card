@@ -11,6 +11,11 @@ public class CardRequestDto {
     private String address;
     private String position;
     private String style;
+    private String avatarUrl;
+    private String facebookUrl;
+    private String instagramUrl;
+    private String lineUrl;
+    private String threadsUrl;
     private Boolean facebook;
     private Boolean instagram;
     private Boolean line;

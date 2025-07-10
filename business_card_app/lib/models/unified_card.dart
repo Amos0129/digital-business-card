@@ -84,17 +84,23 @@ class UnifiedCard {
       phone: json['phone'],
       email: json['email'],
       address: json['address'],
-      hasFb: json['facebook'] ?? false,
-      hasIg: json['instagram'] ?? false,
-      hasLine: json['line'] ?? false,
-      hasThreads: json['threads'] ?? false,
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : null,
+      hasFb: json['facebook'] is bool ? json['facebook'] : false,
+      hasIg: json['instagram'] is bool ? json['instagram'] : false,
+      hasLine: json['line'] is bool ? json['line'] : false,
+      hasThreads: json['threads'] is bool ? json['threads'] : false,
       fbUrl: json['facebookUrl'],
       igUrl: json['instagramUrl'],
       lineUrl: json['lineUrl'],
       threadsUrl: json['threadsUrl'],
+      avatarUrl:
+          json['avatarUrl'] != null && json['avatarUrl'].toString().isNotEmpty
+          ? 'http://192.168.205.54:5566${json['avatarUrl']}'
+          : null,
+
+      style: json['style'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : null,
     );
   }
 
@@ -113,9 +119,13 @@ class UnifiedCard {
               )
               .name;
 
-    return UnifiedCard.fromCardDetailJson(
-      json,
-    ).copyWith(group: groupName, groupId: groupId);
+    final parsed = UnifiedCard.fromCardDetailJson(json);
+
+    return parsed.copyWith(
+      group: groupName,
+      groupId: groupId,
+      style: json['style'],
+    );
   }
 
   /// ✅ 用於掃描後加入預設群組用
@@ -154,6 +164,7 @@ class UnifiedCard {
     String? address,
     String? initialRemark,
     String? group,
+    String? style,
     bool? isScanned,
     bool? isPaperBased,
     DateTime? createdAt,
@@ -178,6 +189,7 @@ class UnifiedCard {
       address: address ?? this.address,
       initialRemark: initialRemark ?? this.initialRemark,
       group: group ?? this.group,
+      style: style ?? this.style,
       isScanned: isScanned ?? this.isScanned,
       isPaperBased: isPaperBased ?? this.isPaperBased,
       createdAt: createdAt ?? this.createdAt,

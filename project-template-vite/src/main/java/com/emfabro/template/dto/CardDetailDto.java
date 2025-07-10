@@ -15,18 +15,30 @@ public class CardDetailDto {
     private String email;
     private String address;
     private String style;
+    private String avatarUrl;
+    private String facebookUrl;
+    private String instagramUrl;
+    private String lineUrl;
+    private String threadsUrl;
     private Boolean facebook;
     private Boolean instagram;
     private Boolean line;
     private Boolean threads;
 
-    private Integer groupId;
-    private String groupName;
-
-
-    public CardDetailDto(Integer id, String name, String company, String phone,
-            String email, String address, String style,
-            Boolean facebook, Boolean instagram, Boolean line, Boolean threads) {
+    // ✅ 這段就是你要加的
+    public CardDetailDto(
+            Integer id,
+            String name,
+            String company,
+            String phone,
+            String email,
+            String address,
+            String style,
+            Boolean facebook,
+            Boolean instagram,
+            Boolean line,
+            Boolean threads
+    ) {
         this.id = id;
         this.name = name;
         this.company = company;
@@ -40,7 +52,6 @@ public class CardDetailDto {
         this.threads = threads;
     }
 
-
     public static CardDetailDto fromEntity(Card card) {
         CardDetailDto dto = new CardDetailDto();
         dto.setId(card.getId());
@@ -50,19 +61,15 @@ public class CardDetailDto {
         dto.setEmail(card.getEmail());
         dto.setAddress(card.getAddress());
         dto.setStyle(card.getStyle());
+        dto.setAvatarUrl(card.getAvatarUrl());
+        dto.setFacebookUrl(card.getFacebookUrl());
+        dto.setInstagramUrl(card.getInstagramUrl());
+        dto.setLineUrl(card.getLineUrl());
+        dto.setThreadsUrl(card.getThreadsUrl());
         dto.setFacebook(card.getFacebook());
         dto.setInstagram(card.getInstagram());
         dto.setLine(card.getLine());
         dto.setThreads(card.getThreads());
-        return dto;
-    }
-
-    public static CardDetailDto fromEntity(Card card, Group group) {
-        CardDetailDto dto = fromEntity(card);
-        if (group != null) {
-            dto.setGroupId(group.getId());
-            dto.setGroupName(group.getName());
-        }
         return dto;
     }
 }

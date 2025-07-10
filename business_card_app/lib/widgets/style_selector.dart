@@ -33,7 +33,10 @@ class StyleSelector extends StatelessWidget {
                   width: 2,
                 ),
               ),
-              child: Text(style['name'], style: TextStyle(color: style['text'])),
+              child: Text(
+                style['name'] ?? '',
+                style: TextStyle(color: style['text']),
+              ),
             ),
           );
         }).toList(),

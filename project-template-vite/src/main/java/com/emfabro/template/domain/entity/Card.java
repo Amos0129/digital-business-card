@@ -42,6 +42,21 @@ public class Card {
     @Column(name = "style")
     private String style;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
+    @Column(name = "fb_url")
+    private String facebookUrl;
+
+    @Column(name = "ig_url")
+    private String instagramUrl;
+
+    @Column(name = "line_url")
+    private String lineUrl;
+
+    @Column(name = "threads_url")
+    private String threadsUrl;
+
     @Column(name = "facebook")
     private Boolean facebook;
 

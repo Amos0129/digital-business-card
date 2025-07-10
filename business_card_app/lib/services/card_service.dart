@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import '../models/card_request.dart';
 import '../models/card_response.dart';
 import '../constants/api_routes.dart';
@@ -42,6 +44,46 @@ class CardService {
     } else {
       final msg = _parseError(response.body);
       throw Exception('查詢名片失敗: $msg');
+    }
+  }
+
+  Future<String> uploadAvatar(int cardId, XFile imageFile) async {
+    final url = ApiRoutes.uploadAvatar(cardId);
+    final request = http.MultipartRequest('POST', url)
+      ..headers['Authorization'] = 'Bearer ${await api.getToken()}';
+
+    if (kIsWeb) {
+      final bytes = await imageFile.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: imageFile.name,
+      );
+      request.files.add(multipartFile);
+    } else {
+      request.files.add(
+        await http.MultipartFile.fromPath('file', imageFile.path),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      return response.body;
+    } else {
+      final msg = _parseError(response.body);
+      throw Exception('頭像上傳失敗: $msg');
+    }
+  }
+
+  Future<void> clearAvatar(int cardId) async {
+    final url = ApiRoutes.clearAvatar(cardId);
+    final response = await api.patch(url, null, auth: true); // PATCH + auth
+
+    if (response.statusCode != 200) {
+      final msg = _parseError(response.body);
+      throw Exception('清除頭像失敗: $msg');
     }
   }
 

@@ -9,6 +9,11 @@ class CardRequest {
   final bool instagram;
   final bool line;
   final bool threads;
+  final String? facebookUrl;
+  final String? instagramUrl;
+  final String? lineUrl;
+  final String? threadsUrl;
+  final String? avatarUrl;
 
   CardRequest({
     required this.name,
@@ -21,6 +26,11 @@ class CardRequest {
     required this.instagram,
     required this.line,
     required this.threads,
+    this.facebookUrl,
+    this.instagramUrl,
+    this.lineUrl,
+    this.threadsUrl,
+    this.avatarUrl,
   });
 
   Map<String, dynamic> toJson() => {
@@ -34,5 +44,10 @@ class CardRequest {
     'instagram': instagram,
     'line': line,
     'threads': threads,
+    'facebookUrl': facebookUrl,
+    'instagramUrl': instagramUrl,
+    'lineUrl': lineUrl,
+    'threadsUrl': threadsUrl,
+    'avatarUrl': avatarUrl,
   };
 }

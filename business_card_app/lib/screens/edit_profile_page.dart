@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:image_picker/image_picker.dart';
 import '../widgets/social_field.dart';
 import '../widgets/style_selector.dart';
 import '../widgets/card_preview.dart';
@@ -7,6 +7,8 @@ import '../widgets/app_text_field.dart';
 
 import '../models/card_request.dart';
 import '../services/card_service.dart';
+import '../constants/style_config.dart';
+import '../utils/app_dialog.dart';
 
 class EditProfilePage extends StatefulWidget {
   final int userId;
@@ -32,45 +34,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _lineController = TextEditingController();
   final _threadsController = TextEditingController();
 
-  bool _hasFacebook = true;
-  bool _hasInstagram = true;
-  bool _hasLine = true;
+  bool _hasFacebook = false;
+  bool _hasInstagram = false;
+  bool _hasLine = false;
   bool _hasThreads = false;
 
   String _selectedStyleId = 'default';
   String? _avatarUrl;
   int? _cardId;
-
-  final List<Map<String, dynamic>> _styles = [
-    {
-      'id': 'default',
-      'name': '預設樣式',
-      'bg': Colors.white,
-      'text': Colors.black87,
-      'accent': const Color(0xFF4A6CFF),
-    },
-    {
-      'id': 'minimal',
-      'name': '極簡風',
-      'bg': Colors.grey.shade900,
-      'text': Colors.white,
-      'accent': Colors.white,
-    },
-    {
-      'id': 'pink_card',
-      'name': '卡片風格 A',
-      'bg': Colors.pink.shade50,
-      'text': Colors.pink.shade900,
-      'accent': Colors.pink,
-    },
-    {
-      'id': 'mint_card',
-      'name': '卡片風格 B',
-      'bg': Colors.green.shade50,
-      'text': Colors.green.shade900,
-      'accent': Colors.green,
-    },
-  ];
 
   @override
   void initState() {
@@ -114,14 +85,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
       instagram: _hasInstagram,
       line: _hasLine,
       threads: _hasThreads,
+      facebookUrl: _facebookController.text,
+      instagramUrl: _instagramController.text,
+      lineUrl: _lineController.text,
+      threadsUrl: _threadsController.text,
+      avatarUrl: _avatarUrl,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedStyle = _styles.firstWhere(
-      (s) => s['id'] == _selectedStyleId,
-    );
+    final selectedStyle = getStyleById(_selectedStyleId);
 
     return Scaffold(
       appBar: AppBar(
@@ -159,7 +133,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               _buildSectionTitle('名片樣式'),
               StyleSelector(
                 selectedId: _selectedStyleId,
-                styles: _styles,
+                styles: styles,
                 onSelect: (id) => setState(() => _selectedStyleId = id),
               ),
 
@@ -193,12 +167,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SizedBox(height: 30),
               _buildSectionTitle('電子名片預覽'),
               CardPreview(
-                style: selectedStyle,
+                styleId: _selectedStyleId,
                 name: _nameController.text,
                 company: _companyController.text,
                 phone: _phoneController.text,
                 email: _emailController.text,
                 address: _addressController.text,
+                fbUrl: _hasFacebook ? _facebookController.text : null,
+                igUrl: _hasInstagram ? _instagramController.text : null,
+                lineUrl: _hasLine ? _lineController.text : null,
+                threadsUrl: _hasThreads ? _threadsController.text : null,
+                avatarUrl: (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                    ? 'http://192.168.205.54:5566$_avatarUrl'
+                    : null,
               ),
 
               const SizedBox(height: 30),
@@ -222,6 +203,47 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile == null || _cardId == null) return;
+
+    try {
+      final avatarUrl = await cardService.uploadAvatar(_cardId!, pickedFile);
+
+      setState(() {
+        _avatarUrl = avatarUrl;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('頭像上傳成功')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('頭像上傳失敗: $e')));
+    }
+  }
+
+  Future<void> _clearAvatar() async {
+    if (_cardId == null) return;
+
+    try {
+      await cardService.clearAvatar(_cardId!);
+      setState(() {
+        _avatarUrl = null;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('頭像已清除')));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('清除頭像失敗: $e')));
+    }
+  }
+
   Future<void> _initForm() async {
     try {
       final cards = await cardService.getMyCards();
@@ -235,10 +257,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _emailController.text = card.email;
           _addressController.text = card.address;
           _selectedStyleId = card.style;
-          _hasFacebook = card.facebook;
-          _hasInstagram = card.instagram;
-          _hasLine = card.line;
-          _hasThreads = card.threads;
+
+          _facebookController.text = card.facebookUrl ?? '';
+          _instagramController.text = card.instagramUrl ?? '';
+          _lineController.text = card.lineUrl ?? '';
+          _threadsController.text = card.threadsUrl ?? '';
+
+          _hasFacebook = card.facebookUrl?.isNotEmpty == true;
+          _hasInstagram = card.instagramUrl?.isNotEmpty == true;
+          _hasLine = card.lineUrl?.isNotEmpty == true;
+          _hasThreads = card.threadsUrl?.isNotEmpty == true;
+
+          _avatarUrl = card.avatarUrl;
         });
       }
     } catch (e) {
@@ -272,33 +302,66 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Widget _buildAvatarSection() {
-    return Center(
-      child: Stack(
-        children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundColor: Colors.grey.shade200,
-            child: Icon(Icons.person, size: 48, color: Colors.grey),
-          ),
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: GestureDetector(
-              onTap: () {
-                // TODO: 開啟相簿選擇頭像
-              },
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF4A6CFF),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.edit, size: 16, color: Colors.white),
+    const serverBaseUrl = 'http://192.168.205.54:5566'; // ✅ 改成你 API 的 IP + Port
+
+    final resolvedAvatarUrl = (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+        ? '$serverBaseUrl$_avatarUrl'
+        : null;
+
+    return Column(
+      children: [
+        Center(
+          child: Stack(
+            children: [
+              CircleAvatar(
+                radius: 48,
+                backgroundColor: Colors.grey.shade200,
+                backgroundImage: resolvedAvatarUrl != null
+                    ? NetworkImage(resolvedAvatarUrl)
+                    : null,
+                child: resolvedAvatarUrl == null
+                    ? const Icon(Icons.person, size: 48, color: Colors.grey)
+                    : null,
               ),
-            ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: _pickAndUploadAvatar,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF4A6CFF),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        if (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+          TextButton.icon(
+            onPressed: () {
+              showAppDialog(
+                context: context,
+                type: AppDialogType.confirm,
+                title: '確認清除頭像？',
+                message: '這個動作無法復原',
+                onConfirm: () async {
+                  await _clearAvatar();
+                },
+              );
+            },
+            icon: const Icon(Icons.delete, color: Colors.red),
+            label: const Text('清除頭像', style: TextStyle(color: Colors.red)),
+          ),
+      ],
     );
   }
 

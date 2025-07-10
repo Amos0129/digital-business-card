@@ -16,8 +16,24 @@ public class ForceForward implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
-        request.getRequestDispatcher("/").forward(request, response);
+        String path = request.getRequestURI();
 
+        // 放行 API 路徑與靜態資源
+        if (path.startsWith("/api/")
+            || path.startsWith("/static/")
+            || path.endsWith(".js")
+            || path.endsWith(".css")
+            || path.endsWith(".ico")
+            || path.endsWith(".png")
+            || path.endsWith(".jpg")
+            || path.endsWith(".jpeg")
+            || path.endsWith(".webp")
+        ) {
+            return true;
+        }
+
+        // 其餘一律 forward 給 index.html（SPA）
+        request.getRequestDispatcher("/").forward(request, response);
         return false;
     }
 }

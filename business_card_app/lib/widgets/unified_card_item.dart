@@ -33,6 +33,35 @@ class UnifiedCardItem extends StatelessWidget {
     this.onSelected,
   });
 
+  Widget buildAvatar(String? avatarUrl, {double radius = 30}) {
+    debugPrint('[avatarUrl] => $avatarUrl');
+    final double size = radius * 2;
+
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipOval(
+        child: avatarUrl != null && avatarUrl.isNotEmpty
+            ? Image.network(
+                avatarUrl,
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.person, color: Colors.grey),
+                  );
+                },
+              )
+            : Container(
+                color: Colors.grey.shade200,
+                child: const Icon(Icons.person, color: Colors.grey),
+              ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final content = viewMode == ViewMode.card
@@ -104,16 +133,7 @@ class UnifiedCardItem extends StatelessWidget {
                   ),
 
                 // 頭像
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage: card.avatarUrl != null
-                      ? NetworkImage(card.avatarUrl!)
-                      : null,
-                  child: card.avatarUrl == null
-                      ? const Icon(Icons.person, color: Colors.grey)
-                      : null,
-                ),
+                buildAvatar(card.avatarUrl),
 
                 const SizedBox(width: 14),
 
@@ -326,15 +346,7 @@ class UnifiedCardItem extends StatelessWidget {
       // ✅ 多選模式下顯示 Checkbox，否則顯示大頭貼
       leading: isSelectionMode
           ? Checkbox(value: isSelected, onChanged: onSelected)
-          : CircleAvatar(
-              backgroundColor: Colors.grey.shade200,
-              backgroundImage: card.avatarUrl != null
-                  ? NetworkImage(card.avatarUrl!)
-                  : null,
-              child: card.avatarUrl == null
-                  ? const Icon(Icons.person, color: Colors.grey)
-                  : null,
-            ),
+          : buildAvatar(card.avatarUrl),
 
       title: Text(
         card.safeName,

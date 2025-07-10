@@ -4,13 +4,12 @@ import '../widgets/profile_card.dart';
 import '../widgets/social_buttons.dart';
 import '../widgets/qr_section.dart';
 import '../widgets/bottom_nav.dart';
-import '../widgets/scanned_card.dart';
-import '../utils/scan_dialog.dart';
 import '../screens/edit_profile_page.dart';
 import '../models/user.dart';
 import '../models/card_response.dart';
 import '../services/card_service.dart';
 import '../providers/user_provider.dart';
+import '../services/scan_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,7 +22,6 @@ class _HomePageState extends State<HomePage> {
   late final CardService cardService;
   late UserModel user;
   CardResponse? _card;
-  CardResponse? _scannedCard; // ✅ 掃描結果
 
   int currentIndex = 0;
   bool _loading = false;
@@ -77,6 +75,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   ProfileCard(
                     name: _card?.name ?? '尚未建立名片',
+                    photoUrl: _card?.fullAvatarUrl,
                     onEdit: () async {
                       if (user == null) return;
                       await Navigator.push(
@@ -96,24 +95,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 12),
                   QRSection(hasProfile: hasProfile, card: _card),
-                  if (_scannedCard != null)
-                    ScannedCard(
-                      cardId: _scannedCard!.id,
-                      name: _scannedCard!.name,
-                      phone: _scannedCard!.phone,
-                      email: _scannedCard!.email,
-                      company: _scannedCard!.company,
-                      address: _scannedCard!.address,
-                      avatarUrl: null,
-                      hasFb: _scannedCard!.facebook,
-                      hasIg: _scannedCard!.instagram,
-                      hasLine: _scannedCard!.line,
-                      hasThreads: _scannedCard!.threads,
-                      fbUrl: "https://facebook.com/${_scannedCard!.name}",
-                      igUrl: "https://instagram.com/${_scannedCard!.name}",
-                      lineUrl: "https://line.me/ti/p/${_scannedCard!.name}",
-                      threadsUrl: "https://threads.net/${_scannedCard!.name}",
-                    ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -130,28 +111,7 @@ class _HomePageState extends State<HomePage> {
               Navigator.pushReplacementNamed(context, '/groups');
               break;
             case 2:
-              showScannerDialog(context, (String result) async {
-                final int? cardId = int.tryParse(result);
-                if (cardId == null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('QR Code 資料無效')));
-                  return;
-                }
-
-                try {
-                  final card = await cardService.getCardById(cardId);
-                  if (!context.mounted) return;
-
-                  setState(() {
-                    _scannedCard = card;
-                  });
-                } catch (e) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('找不到名片資料: $e')));
-                }
-              });
+              ScanService.scanAndNavigate(context);
               break;
             case 3:
               Navigator.pushReplacementNamed(context, '/settings');

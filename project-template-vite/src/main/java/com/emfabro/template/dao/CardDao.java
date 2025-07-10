@@ -1,6 +1,7 @@
 package com.emfabro.template.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.emfabro.template.domain.entity.Card;
 import com.emfabro.template.domain.entity.User;
@@ -11,4 +12,5 @@ import org.springframework.stereotype.Repository;
 public interface CardDao extends JpaRepository<Card, Integer> {
     List<Card> findByUser(User user);
     List<Card> findByUserAndIsPublicTrue(User user);
+    Optional<Card> findByIdAndUserId(Integer cardId, Integer userId);
 }

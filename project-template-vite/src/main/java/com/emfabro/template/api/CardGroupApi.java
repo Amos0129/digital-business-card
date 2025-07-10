@@ -3,6 +3,7 @@ package com.emfabro.template.api;
 import com.emfabro.template.domain.entity.CardGroup;
 import com.emfabro.template.dto.CardDetailDto;
 import com.emfabro.template.dto.CardGroupDto;
+import com.emfabro.template.dto.CardWithGroupDto;
 import com.emfabro.template.service.CardGroupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -48,7 +49,6 @@ public class CardGroupApi {
             @RequestAttribute("userId") Integer userId) {
         cardGroupService.removeCardFromGroup(cardId, groupId, userId);
     }
-
     @GetMapping("/by-card/{cardId}")
     public List<CardGroup> getGroupsByCard(@PathVariable Integer cardId) {
         return cardGroupService.getGroupsByCard(cardId);
@@ -62,7 +62,7 @@ public class CardGroupApi {
     }
 
     @GetMapping("/by-user")
-    public List<CardDetailDto> getCardsByUser(@RequestAttribute("userId") Integer userId) {
+    public List<CardWithGroupDto> getCardsByUser(@RequestAttribute("userId") Integer userId) {
         return cardGroupService.getCardDetailsByUser(userId);
     }
 }

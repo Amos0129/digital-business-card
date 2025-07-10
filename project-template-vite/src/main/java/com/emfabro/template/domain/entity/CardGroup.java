@@ -17,7 +17,7 @@ public class CardGroup {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer  id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "card_id", nullable = false)
@@ -26,4 +26,8 @@ public class CardGroup {
     @ManyToOne
     @JoinColumn(name = "group_id", nullable = false)
     private Group group;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

@@ -5,6 +5,7 @@ import '../services/group_service.dart';
 import '../services/card_group_service.dart';
 import '../services/card_service.dart';
 import '../enums/view_mode.dart';
+import '../models/card_response.dart';
 
 class CardGroupViewModel extends ChangeNotifier {
   final TextEditingController searchController = TextEditingController();
@@ -56,8 +57,7 @@ class CardGroupViewModel extends ChangeNotifier {
 
   Future<void> loadCards() async {
     _cards = []; // 清空
-
-    final seenCardIds = <int>{}; // 注意：用 int
+    final seenCardIds = <int>{};
 
     if (_selectedGroup == '全部') {
       final rawCards = await _cardGroupService.getCardsByUser();
@@ -70,7 +70,10 @@ class CardGroupViewModel extends ChangeNotifier {
         json['groupId'] = group?.groupId;
         json['groupName'] = group?.groupName ?? '未分類';
 
-        _cards.add(UnifiedCard.fromCardDetailJsonWithGroups(json, _groups));
+        final cardResponse = CardResponse.fromJson(json);
+        final unifiedCard = cardResponse.toUnifiedCard();
+
+        _cards.add(unifiedCard);
       }
     } else {
       final group = _groups.firstWhere((g) => g.name == _selectedGroup);
@@ -80,7 +83,13 @@ class CardGroupViewModel extends ChangeNotifier {
         final cardId = json['id'] as int;
         if (!seenCardIds.add(cardId)) continue;
 
-        _cards.add(UnifiedCard.fromCardDetailJsonWithGroups(json, _groups));
+        json['groupId'] = group.id;
+        json['groupName'] = group.name;
+
+        final cardResponse = CardResponse.fromJson(json);
+        final unifiedCard = cardResponse.toUnifiedCard();
+
+        _cards.add(unifiedCard);
       }
     }
 

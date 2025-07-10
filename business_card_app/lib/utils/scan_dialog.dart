@@ -4,17 +4,13 @@ import '../utils/qr_share_utils.dart';
 import '../models/unified_card.dart';
 import '../models/card_response.dart';
 
-void showScannerDialog(
-  BuildContext context,
-  void Function(String) onScan, {
-  CardResponse? card, // ✅ 加在這裡
-}) {
+Future<String?> showScanDialog(BuildContext context, {CardResponse? card}) {
   final controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     facing: CameraFacing.back,
   );
 
-  showDialog(
+  return showDialog<String>(
     context: context,
     barrierDismissible: true,
     builder: (_) => Dialog(
@@ -29,8 +25,7 @@ void showScannerDialog(
             onDetect: (capture) {
               final value = capture.barcodes.first.rawValue;
               if (value != null) {
-                Navigator.pop(context); // 關閉 dialog
-                onScan(value); // 把掃描結果傳出去
+                Navigator.pop(context, value); // ✅ 把值傳回去
               }
             },
           ),
@@ -71,48 +66,47 @@ void showScannerDialog(
           ),
 
           // 🧭 我的 QR 碼按鈕
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.qr_code),
-                label: const Text('我的 QR 碼'),
-                onPressed: () {
-                  if (card == null) return;
-
-                  showQrShareDialog(
-                    context,
-                    UnifiedCard(
-                      id: card.id.toString(),
-                      name: card.name,
-                      phone: card.phone,
-                      email: card.email,
-                      company: card.company,
-                      address: card.address,
-                      avatarUrl: null,
-                      hasFb: card.facebook,
-                      hasIg: card.instagram,
-                      hasLine: card.line,
-                      hasThreads: card.threads,
+          if (card != null)
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.qr_code),
+                  label: const Text('我的 QR 碼'),
+                  onPressed: () {
+                    showQrShareDialog(
+                      context,
+                      UnifiedCard(
+                        id: card.id.toString(),
+                        name: card.name,
+                        phone: card.phone,
+                        email: card.email,
+                        company: card.company,
+                        address: card.address,
+                        avatarUrl: null,
+                        hasFb: card.facebook,
+                        hasIg: card.instagram,
+                        hasLine: card.line,
+                        hasThreads: card.threads,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4A6CFF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A6CFF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     ),

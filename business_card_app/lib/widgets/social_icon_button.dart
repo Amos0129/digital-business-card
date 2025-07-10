@@ -18,8 +18,18 @@ class SocialIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        if (await canLaunchUrl(Uri.parse(url))) {
-          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        final uri = Uri.tryParse(url);
+        if (uri == null || (!uri.hasScheme || !uri.hasAuthority)) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('無效的 $label 連結')));
+          return;
+        }
+
+        if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('無法開啟 $label')));
         }
       },
       child: Column(
@@ -30,7 +40,10 @@ class SocialIconButton extends StatelessWidget {
             child: FaIcon(icon, size: 14, color: const Color(0xFF4A6CFF)),
           ),
           const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.black54)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: Colors.black54),
+          ),
         ],
       ),
     );

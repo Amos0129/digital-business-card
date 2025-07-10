@@ -27,14 +27,20 @@ class CardGroupService {
     final url = ApiRoutes.getGroupOfCard(cardId);
     final response = await api.get(url, auth: true);
 
-    if (response.statusCode == 404) return null;
+    if (response.statusCode == 404 || response.body.trim().isEmpty) {
+      return null;
+    }
 
     if (response.statusCode != 200) {
       throw Exception('無法查詢名片所屬群組: ${response.body}');
     }
 
-    final json = jsonDecode(response.body);
-    return CardGroupDto.fromJson(json);
+    try {
+      final json = jsonDecode(response.body);
+      return CardGroupDto.fromJson(json);
+    } catch (e) {
+      throw Exception('⚠️ 解析群組資料失敗: ${e.toString()}');
+    }
   }
 
   Future<List<Map<String, dynamic>>> getCardsByGroup(int groupId) async {

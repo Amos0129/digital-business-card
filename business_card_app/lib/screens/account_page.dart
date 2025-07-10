@@ -1,8 +1,6 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../utils/scan_dialog.dart';
 import '../utils/app_dialog.dart';
 
 import '../widgets/bottom_nav.dart';
@@ -11,13 +9,10 @@ import '../viewmodels/app_settings.dart';
 
 import '../screens/edit_account_page.dart';
 
-import '../services/card_service.dart';
-import '../widgets/scanned_card.dart';
-
-import '../screens/scanned_card_page.dart';
 import '../providers/user_provider.dart';
 import '../models/user.dart';
 import '../services/logout_service.dart';
+import '../services/scan_service.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
@@ -248,48 +243,7 @@ class _AccountPageState extends State<AccountPage> {
         Navigator.pushReplacementNamed(context, '/groups');
         break;
       case 2:
-        showScannerDialog(context, (String result) async {
-          final int? cardId = int.tryParse(result);
-          if (cardId == null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('QR Code 資料無效')));
-            return;
-          }
-
-          try {
-            final card = await CardService().getCardById(cardId);
-            if (!context.mounted) return;
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ScannedCardPage(
-                  scannedCard: ScannedCard(
-                    cardId: card.id,
-                    name: card.name,
-                    phone: card.phone,
-                    email: card.email,
-                    company: card.company,
-                    address: card.address,
-                    avatarUrl: null,
-                    hasFb: card.facebook,
-                    hasIg: card.instagram,
-                    hasLine: card.line,
-                    hasThreads: card.threads,
-                    fbUrl: "https://facebook.com/${card.name}",
-                    igUrl: "https://instagram.com/${card.name}",
-                    lineUrl: "https://line.me/ti/p/${card.name}",
-                    threadsUrl: "https://threads.net/${card.name}",
-                  ),
-                ),
-              ),
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('找不到名片資料: $e')));
-          }
-        });
+        ScanService.scanAndNavigate(context);
         break;
     }
   }

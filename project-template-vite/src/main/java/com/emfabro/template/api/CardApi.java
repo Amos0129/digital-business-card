@@ -6,6 +6,7 @@ import com.emfabro.template.dto.CardRequestDto;
 import com.emfabro.template.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -54,5 +55,18 @@ public class CardApi {
     @GetMapping("/{cardId}")
     public CardDetailDto getCardById(@PathVariable Integer cardId) {
         return cardService.getCardById(cardId);
+    }
+
+    @PostMapping("/{cardId}/avatar")
+    public String uploadAvatar(
+            @PathVariable Integer cardId,
+            @RequestParam("file") MultipartFile file,
+            @RequestAttribute("userId") Integer userId) {
+        return cardService.uploadAvatar(cardId, file, userId);
+    }
+
+    @PatchMapping("/{cardId}/clear-avatar")
+    public void clearAvatar(@PathVariable Integer cardId, @RequestAttribute("userId") Integer userId) {
+        cardService.clearAvatar(cardId, userId);
     }
 }

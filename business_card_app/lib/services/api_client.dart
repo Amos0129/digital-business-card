@@ -7,7 +7,7 @@ class ApiClient {
 
   ApiClient({http.Client? client}) : _client = client ?? http.Client();
 
-  Future<String?> _getToken() async {
+  Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
   }
@@ -15,7 +15,7 @@ class ApiClient {
   Future<Map<String, String>> _headers({bool withAuth = false}) async {
     final headers = {'Content-Type': 'application/json'};
     if (withAuth) {
-      final token = await _getToken();
+      final token = await getToken();
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
@@ -36,6 +36,15 @@ class ApiClient {
   Future<http.Response> put(Uri url, dynamic body, {bool auth = false}) async {
     final headers = await _headers(withAuth: auth);
     return _client.put(url, headers: headers, body: jsonEncode(body));
+  }
+
+  Future<http.Response> patch(
+    Uri url,
+    dynamic body, {
+    bool auth = false,
+  }) async {
+    final headers = await _headers(withAuth: auth);
+    return _client.patch(url, headers: headers, body: jsonEncode(body));
   }
 
   Future<http.Response> delete(Uri url, {bool auth = false}) async {
