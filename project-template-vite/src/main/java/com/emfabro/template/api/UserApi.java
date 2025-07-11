@@ -1,6 +1,7 @@
 package com.emfabro.template.api;
 
 import com.emfabro.template.domain.entity.User;
+import com.emfabro.template.dto.ResetPasswordRequestDto;
 import com.emfabro.template.dto.UserForgotPasswordDto;
 import com.emfabro.template.dto.UserLoginDto;
 import com.emfabro.template.dto.UserLoginResponseDto;
@@ -8,10 +9,13 @@ import com.emfabro.template.dto.UserRegisterDto;
 import com.emfabro.template.dto.UserResponseDto;
 import com.emfabro.template.service.UserService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@Validated
 @CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/api/user")
@@ -28,7 +32,7 @@ public class UserApi {
     }
 
     @PostMapping("/register")
-    public UserResponseDto register(@RequestBody UserRegisterDto dto) {
+    public UserResponseDto register(@RequestBody @Valid UserRegisterDto dto) {
         return userService.register(dto);
     }
 
@@ -40,6 +44,11 @@ public class UserApi {
     @PostMapping("/forgot-password")
     public void forgotPassword(@RequestBody UserForgotPasswordDto dto) {
         userService.sendResetLink(dto);
+    }
+
+    @PutMapping("/reset-password")
+    public void resetPassword(@RequestBody @Valid ResetPasswordRequestDto dto) {
+        userService.resetPassword(dto.getToken(), dto.getNewPassword());
     }
 
     @GetMapping("/by-email")

@@ -1,14 +1,16 @@
 package com.emfabro.template.service;
 
+import com.emfabro.global.utils.OwnershipValidator;
 import com.emfabro.template.dao.CardDao;
 import com.emfabro.template.dao.CardGroupDao;
 import com.emfabro.template.dao.GroupDao;
 import com.emfabro.template.domain.entity.Card;
 import com.emfabro.template.domain.entity.CardGroup;
 import com.emfabro.template.domain.entity.Group;
-import com.emfabro.template.dto.CardDetailDto;
 import com.emfabro.template.dto.CardGroupDto;
 import com.emfabro.template.dto.CardWithGroupDto;
+import com.emfabro.global.exception.NotFoundException;
+import com.emfabro.global.exception.ForbiddenException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +24,10 @@ public class CardGroupService {
     private final CardDao cardJpa;
     private final GroupDao.Jpa groupJpa;
     private final GroupService groupService;
+    private final OwnershipValidator ownershipValidator;
 
     public CardGroupDto getGroupOfCardForUser(Integer userId, Integer cardId) {
         List<CardGroup> groups = cardGroupJpa.findByCardAndUser(cardId, userId);
-
-        // if (groups.isEmpty()) {
-        //     throw new RuntimeException("找不到這張卡在使用者的群組中");
-        // }
-
-        // ✅ 改成這樣，讓它回傳 null（表示未加入任何群組）
         if (groups.isEmpty()) {
             return null;
         }
@@ -42,15 +39,18 @@ public class CardGroupService {
     public void changeCardGroup(Integer cardId, Integer newGroupId, Integer userId) {
         List<CardGroup> oldGroups = cardGroupJpa.findByCardAndUser(cardId, userId);
         if (oldGroups.isEmpty()) {
-            throw new RuntimeException("這張卡片不屬於該使用者（沒有幫這張卡分組過）");
+            throw new ForbiddenException("這張卡片不屬於該使用者（沒有幫這張卡分組過）");
         }
 
         oldGroups.forEach(cardGroupJpa::delete);
 
         Card card = cardJpa.findById(cardId)
-                           .orElseThrow(() -> new RuntimeException("名片不存在"));
+                           .orElseThrow(() -> new NotFoundException("名片不存在"));
 
-        Group group = getGroupOwnedByUser(newGroupId, userId);
+        Group group = groupJpa.findById(newGroupId)
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
+
+        ownershipValidator.checkGroupOwner(group, userId);
 
         CardGroup newRelation = new CardGroup();
         newRelation.setCard(card);
@@ -67,62 +67,46 @@ public class CardGroupService {
 
     public CardGroup addCardToGroup(Integer cardId, Integer groupId, Integer userId) {
         Card card = cardJpa.findById(cardId)
-                           .orElseThrow(() -> new RuntimeException("名片不存在"));
-        Group group = getGroupOwnedByUser(groupId, userId);
+                           .orElseThrow(() -> new NotFoundException("名片不存在"));
+        Group group = groupJpa.findById(groupId)
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
+
+        ownershipValidator.checkGroupOwner(group, userId);
 
         CardGroup cardGroup = new CardGroup();
         cardGroup.setCard(card);
         cardGroup.setGroup(group);
-        cardGroup.setUser(group.getUser()); // ✅ 補上這一行：設定持有這張卡的人
+        cardGroup.setUser(group.getUser());
 
         return cardGroupJpa.save(cardGroup);
     }
 
     public void removeCardFromGroup(Integer cardId, Integer groupId, Integer userId) {
-        Group group = getGroupOwnedByUser(groupId, userId);
+        Group group = groupJpa.findById(groupId)
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
+
+        ownershipValidator.checkGroupOwner(group, userId);
+
         List<CardGroup> matches = cardGroupJpa.findByCardIdAndGroupId(cardId, groupId);
         matches.forEach(cardGroupJpa::delete);
     }
 
     public List<CardGroup> getGroupsByCard(Integer cardId) {
         Card card = cardJpa.findById(cardId)
-                           .orElseThrow(() -> new RuntimeException("名片不存在"));
+                           .orElseThrow(() -> new NotFoundException("名片不存在"));
         return cardGroupJpa.findByCard(card);
     }
 
     public List<CardGroup> getCardsByGroup(Integer groupId) {
         Group group = groupJpa.findById(groupId)
-                              .orElseThrow(() -> new RuntimeException("群組不存在"));
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
         return cardGroupJpa.findByGroup(group);
     }
 
     public List<CardWithGroupDto> getCardDetailsByUser(Integer userId) {
-        List<CardGroup> cardGroups = cardGroupJpa.findCardGroupsByUserId(userId); // 改成你剛加的！
+        List<CardGroup> cardGroups = cardGroupJpa.findCardGroupsByUserId(userId);
         return cardGroups.stream()
                          .map(cg -> CardWithGroupDto.from(cg.getCard(), cg.getGroup()))
                          .toList();
-    }
-
-    // 🛡️ 私有方法：確保群組歸屬正確
-    private Group getGroupOwnedByUser(Integer groupId, Integer userId) {
-        Group group = groupJpa.findById(groupId)
-                              .orElseThrow(() -> new RuntimeException("群組不存在"));
-
-        if (!group.getUser().getId().equals(userId)) {
-            throw new RuntimeException("這個群組不屬於該使用者");
-        }
-
-        return group;
-    }
-
-    private Card getCardOwnedByUser(Integer cardId, Integer userId) {
-        Card card = cardJpa.findById(cardId)
-                           .orElseThrow(() -> new RuntimeException("名片不存在"));
-
-        if (!card.getUser().getId().equals(userId)) {
-            throw new RuntimeException("這張名片不屬於該使用者");
-        }
-
-        return card;
     }
 }

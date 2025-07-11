@@ -19,6 +19,7 @@ import 'viewmodels/group_manager_viewmodel.dart';
 
 import '../providers/user_provider.dart';
 import '../screens/splash_page.dart';
+import '../screens/reset_password_page.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -59,20 +60,56 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       home: const SplashPage(),
-      routes: {
-        '/login': (_) => LoginPage(),
-        '/profile': (_) => const HomePage(),
-        '/groups': (_) => ChangeNotifierProvider(
-          create: (_) => GroupManagerViewModel()..loadGroups(),
-          child: const CardGroupPage(),
-        ),
-        '/settings': (_) => const AccountPage(),
-        '/editAccount': (_) => const EditAccountPage(),
-        '/cardDetail': (context) {
-          final card =
-              ModalRoute.of(context)!.settings.arguments as UnifiedCard;
-          return CardDetailPage(card: card);
-        },
+      onGenerateRoute: (RouteSettings settings) {
+        final uri = Uri.parse(settings.name ?? '');
+        //print('Routing to: ${settings.name}');
+        //print('Path: ${uri.path}');
+        //print('Query parameters: ${uri.queryParameters}');
+
+        if (uri.path == '/login') {
+          return MaterialPageRoute(builder: (_) => LoginPage());
+        }
+
+        if (uri.path == '/profile') {
+          return MaterialPageRoute(builder: (_) => const HomePage());
+        }
+
+        if (uri.path == '/groups') {
+          return MaterialPageRoute(
+            builder: (_) => ChangeNotifierProvider(
+              create: (_) => GroupManagerViewModel()..loadGroups(),
+              child: const CardGroupPage(),
+            ),
+          );
+        }
+
+        if (uri.path == '/settings') {
+          return MaterialPageRoute(builder: (_) => const AccountPage());
+        }
+
+        if (uri.path == '/editAccount') {
+          return MaterialPageRoute(builder: (_) => const EditAccountPage());
+        }
+
+        if (uri.path == '/cardDetail') {
+          final card = settings.arguments as UnifiedCard;
+          return MaterialPageRoute(builder: (_) => CardDetailPage(card: card));
+        }
+
+        // 新增：處理重設密碼頁路由，並帶 token 參數
+        if (uri.path == '/reset-password') {
+          final token = uri.queryParameters['token'];
+          if (token != null) {
+            return MaterialPageRoute(
+              builder: (_) => ResetPasswordPage(token: token),
+            );
+          }
+          // token 不存在就導到登入或錯誤頁
+          return MaterialPageRoute(builder: (_) => LoginPage());
+        }
+
+        // 預設導到登入頁
+        return MaterialPageRoute(builder: (_) => LoginPage());
       },
     );
   }

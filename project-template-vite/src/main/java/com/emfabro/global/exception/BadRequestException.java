@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class BadRequestException extends Exception {
+public class BadRequestException extends RuntimeException {
     private Object code;
 
     public BadRequestException(String message) {

@@ -94,7 +94,20 @@ class _HomePageState extends State<HomePage> {
                     hasThreads: _card?.threads ?? false,
                   ),
                   const SizedBox(height: 12),
-                  QRSection(hasProfile: hasProfile, card: _card),
+                  QRSection(
+                    hasProfile: hasProfile,
+                    card: _card,
+                    onCreateCard: () async {
+                      if (user == null) return;
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditProfilePage(userId: user.id),
+                        ),
+                      );
+                      _loadCard(); // 回來後自動刷新
+                    },
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),

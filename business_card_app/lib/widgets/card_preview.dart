@@ -58,116 +58,38 @@ class CardPreview extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 👤 個人資訊卡片區塊
-          Container(
-            padding: const EdgeInsets.all(20),
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
-              borderRadius: BorderRadius.circular(20),
-            ),
+          // 👤 個人資訊（置中）
+          Center(
             child: Column(
               children: [
                 CircleAvatar(
                   radius: 48,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: avatarUrl != null && avatarUrl!.isNotEmpty
+                  backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
                       ? NetworkImage(avatarUrl!)
                       : null,
-                  child: avatarUrl == null || avatarUrl!.isEmpty
+                  child: (avatarUrl == null || avatarUrl!.isEmpty)
                       ? Icon(Icons.person, size: 48, color: Colors.grey[700])
                       : null,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  name,
+                  name.isNotEmpty ? name : '（未填寫姓名）',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: textColor,
                   ),
                 ),
-                const SizedBox(height: 12),
-                if (company.isNotEmpty || address.isNotEmpty)
-                  Column(
-                    children: [
-                      if (company.isNotEmpty)
-                        GestureDetector(
-                          onTap: () => _launch(
-                            'https://www.google.com/search?q=${Uri.encodeComponent(company)}',
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.business,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '公司：',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              Flexible(
-                                child: Text(
-                                  company,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.blue,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      if (address.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: GestureDetector(
-                            onTap: () => _launch(
-                              'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}',
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  size: 16,
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '地址：',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
-                                  ),
-                                ),
-                                Flexible(
-                                  child: Text(
-                                    address,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.blue,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
+                if (company.isNotEmpty || address.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  if (company.isNotEmpty)
+                    _infoRow(Icons.business, '公司', company, link: true),
+                  if (address.isNotEmpty)
+                    _infoRow(Icons.location_on, '地址', address, map: true),
+                ],
                 const SizedBox(height: 16),
                 Wrap(
                   spacing: 20,
@@ -188,60 +110,53 @@ class CardPreview extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 30),
 
-          // 🌐 社交平台區標題
-          if (_hasAnySocial())
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.public, size: 18, color: Colors.grey),
-                  const SizedBox(width: 6),
-                  Text(
-                    '社交平台',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
+          // 🌐 社群平台
+          if (_hasAnySocial()) ...[
+            Row(
+              children: [
+                const Icon(Icons.public, size: 18, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(
+                  '社交平台',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-          // 🌐 社交與通訊平台（統一樣式呈現）
-          Column(
-            children: [
-              _socialTile(
-                icon: FontAwesomeIcons.line,
-                label: 'LINE',
-                subLabel: '加入好友或發送訊息',
-                url: lineUrl,
-                color: lineColor,
-              ),
-              _socialTile(
-                icon: FontAwesomeIcons.threads,
-                label: 'Threads',
-                subLabel: '瀏覽 Threads 個人頁',
-                url: threadsUrl,
-                color: threadsColor,
-              ),
-              _socialTile(
-                icon: FontAwesomeIcons.facebookF,
-                label: 'Facebook',
-                subLabel: '前往 Facebook 頁面',
-                url: fbUrl,
-                color: facebookColor,
-              ),
-              _socialTile(
-                icon: FontAwesomeIcons.instagram,
-                label: 'Instagram',
-                subLabel: '查看 IG 帳號',
-                url: igUrl,
-                color: instagramColor,
-              ),
-            ],
-          ),
+            const SizedBox(height: 12),
+            _socialTile(
+              icon: FontAwesomeIcons.line,
+              label: 'LINE',
+              color: lineColor,
+              url: lineUrl,
+              subLabel: '加入好友或發送訊息',
+            ),
+            _socialTile(
+              icon: FontAwesomeIcons.threads,
+              label: 'Threads',
+              color: threadsColor,
+              url: threadsUrl,
+              subLabel: '瀏覽 Threads 個人頁',
+            ),
+            _socialTile(
+              icon: FontAwesomeIcons.facebookF,
+              label: 'Facebook',
+              color: facebookColor,
+              url: fbUrl,
+              subLabel: '前往 Facebook 頁面',
+            ),
+            _socialTile(
+              icon: FontAwesomeIcons.instagram,
+              label: 'Instagram',
+              color: instagramColor,
+              url: igUrl,
+              subLabel: '查看 IG 帳號',
+            ),
+          ],
 
           // 📌 群組與備註
           if (group.isNotEmpty || note.isNotEmpty) ...[
@@ -257,7 +172,6 @@ class CardPreview extends StatelessWidget {
             if (note.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 12),
-                width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -295,6 +209,51 @@ class CardPreview extends StatelessWidget {
             size: 18,
             color: onTap != null ? Colors.grey.shade700 : Colors.grey.shade400,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(
+    IconData icon,
+    String label,
+    String value, {
+    bool link = false,
+    bool map = false,
+  }) {
+    return GestureDetector(
+      onTap: link
+          ? () => _launch(
+              'https://www.google.com/search?q=${Uri.encodeComponent(value)}',
+            )
+          : map
+          ? () => _launch(
+              'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(value)}',
+            )
+          : null,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: Colors.grey),
+            const SizedBox(width: 4),
+            Text(
+              '$label：',
+              style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+            ),
+            Flexible(
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
     );

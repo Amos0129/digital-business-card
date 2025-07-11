@@ -77,17 +77,32 @@ class UserService {
     }
   }
 
-  Future<UserModel> register(String name, String email, String password) async {
+  Future<UserModel> register(String email, String password) async {
     final res = await api.post(ApiRoutes.register(), {
-      'name': name,
       'email': email,
       'password': password,
     });
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return UserModel.fromJson(jsonDecode(res.body));
-    } else {
-      throw Exception('註冊失敗');
+    }
+
+    try {
+      final parsed = jsonDecode(res.body);
+
+      if (parsed is Map<String, dynamic>) {
+        if (parsed.containsKey('error')) {
+          throw Exception(parsed['error']);
+        } else if (parsed.containsKey('message')) {
+          throw Exception(parsed['message']);
+        } else {
+          throw Exception('註冊失敗：${res.body}');
+        }
+      } else {
+        throw Exception('註冊失敗：格式錯誤');
+      }
+    } catch (e) {
+      throw Exception('註冊失敗：${e.toString()}');
     }
   }
 
@@ -110,6 +125,25 @@ class UserService {
     );
     if (res.statusCode != 200) {
       throw Exception('密碼修改失敗：${res.body}');
+    }
+  }
+
+  Future<void> sendResetLink(String email) async {
+    final res = await api.post(ApiRoutes.forgotPassword(), {'email': email});
+
+    if (res.statusCode != 200) {
+      throw Exception('發送重設信失敗：${res.body}');
+    }
+  }
+
+  Future<void> resetPassword(String token, String newPassword) async {
+    final res = await api.post(ApiRoutes.resetPassword(), {
+      'token': token,
+      'newPassword': newPassword,
+    });
+
+    if (res.statusCode != 200) {
+      throw Exception('重設密碼失敗：${res.body}');
     }
   }
 }

@@ -1,6 +1,8 @@
 package com.emfabro.global.advice;
 
 
+import java.util.Map;
+
 import com.emfabro.global.exception.BadRequestException;
 import com.emfabro.global.exception.ExpectationFailedException;
 import com.emfabro.global.exception.ForbiddenException;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.InvalidMediaTypeException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -26,36 +29,49 @@ public class GlobalExceptionHandler {
     @Autowired
     private Profile profile;
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult().getFieldErrors().stream()
+                                .map(error -> error.getDefaultMessage())
+                                .findFirst()
+                                .orElse("參數驗證失敗");
+
+        printMsg("參數驗證失敗: {}", ex);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                             .body(Map.of("error", errorMessage));
+    }
+
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<Object> badRequest(BadRequestException e) {
         printMsg("請求失敗: {}", e);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                             .body(e.getCode());
+                             .body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<String> forbidden(ForbiddenException e) {
+    public ResponseEntity<Object> forbidden(ForbiddenException e) {
         printMsg("存取被拒: {}", e);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                             .body(PERMISSION_DENIED);
+                             .body(Map.of("error", PERMISSION_DENIED));
     }
 
     @ExceptionHandler(ExpectationFailedException.class)
-    public ResponseEntity<String> expectationFailed(ExpectationFailedException e) {
+    public ResponseEntity<Object> expectationFailed(ExpectationFailedException e) {
         printMsg("執行失敗: {}", e);
 
         return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED)
-                             .body(e.getMessage());
+                             .body(Map.of("error", e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> internalServiceError(Exception e) {
+    public ResponseEntity<Object> internalServiceError(Exception e) {
         printMsg("未知錯誤: {}", e);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                             .body(UNKNOWN_FAIL);
+                             .body(Map.of("error", UNKNOWN_FAIL));
     }
 
     /**

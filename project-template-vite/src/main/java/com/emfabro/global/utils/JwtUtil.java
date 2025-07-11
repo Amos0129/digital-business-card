@@ -19,6 +19,7 @@ public class JwtUtil {
     private Key signingKey;
 
     private static final long EXPIRATION = 1000 * 60 * 60; // 1 小時
+    private static final long RESET_TOKEN_EXPIRATION = 1000 * 60 * 15;
 
     @PostConstruct
     public void init() {
@@ -55,5 +56,34 @@ public class JwtUtil {
                    .parseClaimsJws(token)
                    .getBody()
                    .get("userId", Integer.class);
+    }
+
+    public String generatePasswordResetToken(Integer userId) {
+        return Jwts.builder()
+                   .setSubject("password-reset")
+                   .claim("userId", userId)
+                   .setIssuedAt(new Date())
+                   .setExpiration(new Date(System.currentTimeMillis() + RESET_TOKEN_EXPIRATION))
+                   .signWith(signingKey, SignatureAlgorithm.HS256)
+                   .compact();
+    }
+
+    public Integer validatePasswordResetToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                                .setSigningKey(signingKey)
+                                .build()
+                                .parseClaimsJws(token)
+                                .getBody();
+
+            if (!"password-reset".equals(claims.getSubject())) {
+                throw new JwtException("Token 用途不正確");
+            }
+
+            return claims.get("userId", Integer.class);
+
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new RuntimeException("重設密碼 Token 無效或已過期", e);
+        }
     }
 }

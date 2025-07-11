@@ -18,22 +18,29 @@ public class ForceForward implements HandlerInterceptor {
 
         String path = request.getRequestURI();
 
-        // 放行 API 路徑與靜態資源
-        if (path.startsWith("/api/")
-            || path.startsWith("/static/")
+        System.out.println("➡ ForceForward Interceptor triggered: " + path + " (" + request.getMethod() + ")");
+
+
+        if (path.startsWith("/api/")) {
+            return true;
+        }
+
+        if (path.startsWith("/static/")
             || path.endsWith(".js")
             || path.endsWith(".css")
             || path.endsWith(".ico")
             || path.endsWith(".png")
             || path.endsWith(".jpg")
             || path.endsWith(".jpeg")
-            || path.endsWith(".webp")
-        ) {
+            || path.endsWith(".webp")) {
             return true;
         }
 
-        // 其餘一律 forward 給 index.html（SPA）
-        request.getRequestDispatcher("/").forward(request, response);
-        return false;
+        if ("GET".equalsIgnoreCase(request.getMethod())) {
+            request.getRequestDispatcher("/").forward(request, response);
+            return false;
+        }
+
+        return true;
     }
 }

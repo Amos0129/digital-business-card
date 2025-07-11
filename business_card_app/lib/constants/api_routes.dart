@@ -24,6 +24,10 @@ class ApiRoutes {
     '$base/api/user/password',
   ).replace(queryParameters: {'oldPassword': oldPw, 'newPassword': newPw});
 
+  static Uri forgotPassword() => Uri.parse('$base/api/user/forgot-password');
+
+  static Uri resetPassword() => Uri.parse('$base/api/user/reset-password');
+
   // Card APIs ================================================================
   static Uri getCardById(int cardId) => Uri.parse('$base/api/cards/$cardId');
 
@@ -31,7 +35,7 @@ class ApiRoutes {
 
   static Uri getMyCards() => Uri.parse('$base/api/cards/my');
 
-  static Uri createCard() => Uri.parse('$base/api/cards');
+  static Uri createCard() => Uri.parse('$base/api/cards/my');
 
   static Uri getPublicCardsByUser(int userId) =>
       Uri.parse('$base/api/cards/user/$userId/public');

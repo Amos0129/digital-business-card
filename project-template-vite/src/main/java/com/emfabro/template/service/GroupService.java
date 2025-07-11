@@ -1,5 +1,7 @@
 package com.emfabro.template.service;
 
+import com.emfabro.global.exception.NotFoundException;
+import com.emfabro.global.utils.OwnershipValidator;
 import com.emfabro.template.dao.GroupDao;
 import com.emfabro.template.dao.UserDao;
 import com.emfabro.template.dao.CardGroupDao;
@@ -17,17 +19,19 @@ public class GroupService {
     private final GroupDao.Jpa groupJpa;
     private final UserDao.Jpa userJpa;
     private final CardGroupDao.Jpa cardGroupJpa;
+    private final OwnershipValidator ownershipValidator;
 
     public Group getDefaultGroup(Integer userId) {
         User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("使用者不存在"));
+                           .orElseThrow(() -> new NotFoundException("使用者不存在"));
+
         return groupJpa.findByUserAndName(user, "全部")
-                       .orElseThrow(() -> new RuntimeException("找不到預設群組"));
+                       .orElseThrow(() -> new NotFoundException("找不到預設群組"));
     }
 
     public Group createGroup(Integer userId, String groupName) {
         User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("使用者不存在"));
+                           .orElseThrow(() -> new NotFoundException("使用者不存在"));
 
         Group group = new Group();
         group.setUser(user);
@@ -38,11 +42,9 @@ public class GroupService {
 
     public Group renameGroup(Integer groupId, String newName, Integer userId) {
         Group group = groupJpa.findById(groupId)
-                              .orElseThrow(() -> new RuntimeException("群組不存在"));
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
 
-        if (!group.getUser().getId().equals(userId)) {
-            throw new RuntimeException("你無權修改此群組");
-        }
+        ownershipValidator.checkGroupOwner(group, userId);
 
         group.setName(newName);
         return groupJpa.save(group);
@@ -50,17 +52,15 @@ public class GroupService {
 
     public List<Group> getGroupsByUser(Integer userId) {
         User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("使用者不存在"));
+                           .orElseThrow(() -> new NotFoundException("使用者不存在"));
         return groupJpa.findByUser(user);
     }
 
     public void deleteGroup(Integer groupId, Integer userId) {
         Group group = groupJpa.findById(groupId)
-                              .orElseThrow(() -> new RuntimeException("群組不存在"));
+                              .orElseThrow(() -> new NotFoundException("群組不存在"));
 
-        if (!group.getUser().getId().equals(userId)) {
-            throw new RuntimeException("你無權刪除此群組");
-        }
+        ownershipValidator.checkGroupOwner(group, userId);
 
         cardGroupJpa.deleteByGroup(group);
         groupJpa.delete(group);

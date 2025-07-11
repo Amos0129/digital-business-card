@@ -1,6 +1,6 @@
 package com.emfabro.global.exception;
 
-public class ForbiddenException extends Exception {
+public class ForbiddenException extends RuntimeException {
 
     public ForbiddenException() {
     }

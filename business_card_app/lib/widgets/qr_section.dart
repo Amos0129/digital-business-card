@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import '../utils/qr_share_utils.dart';
-import '../models/unified_card.dart';
 import '../models/card_response.dart';
 import '../services/scan_service.dart';
 
 class QRSection extends StatelessWidget {
   final bool hasProfile;
   final CardResponse? card;
+  final VoidCallback? onCreateCard;
 
-  const QRSection({super.key, required this.hasProfile, required this.card});
+  const QRSection({
+    super.key,
+    required this.hasProfile,
+    required this.card,
+    this.onCreateCard,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,21 +30,15 @@ class QRSection extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
-                  if (!hasProfile) return;
+                  if (!hasProfile) {
+                    if (onCreateCard != null) {
+                      onCreateCard!(); // 呼叫外部傳入的建立名片邏輯
+                    }
+                    return;
+                  }
 
-                  final myCard = UnifiedCard(
-                    id: card!.id.toString(), // 🔥 這裡放 ID 給掃描用
-                    name: card!.name,
-                    phone: card!.phone,
-                    email: card!.email,
-                    company: card!.company,
-                    address: card!.address,
-                    style: card!.style,
-                    hasFb: card!.facebook,
-                    hasIg: card!.instagram,
-                    hasLine: card!.line,
-                    hasThreads: card!.threads,
-                  );
+                  // 有名片就顯示 QRCode
+                  final myCard = card!.toUnifiedCard();
 
                   showQrShareDialog(context, myCard);
                 },

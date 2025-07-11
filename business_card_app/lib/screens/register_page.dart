@@ -102,11 +102,7 @@ class RegisterPage extends StatelessWidget {
                     // 使用 UserService 進行註冊
                     final userService = UserService();
 
-                    final user = await userService.register(
-                      "新用戶",
-                      email,
-                      password,
-                    );
+                    final user = await userService.register(email, password);
 
                     showAppDialog(
                       context: context,
@@ -125,7 +121,7 @@ class RegisterPage extends StatelessWidget {
                       context: context,
                       type: AppDialogType.error,
                       title: "註冊失敗",
-                      message: e.toString(),
+                      message: e.toString().replaceFirst('Exception: ', ''),
                     );
                   }
                 },

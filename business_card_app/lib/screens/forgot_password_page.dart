@@ -7,6 +7,7 @@ import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 
 import '../utils/app_dialog.dart';
+import '../services/user_service.dart';
 
 class ForgotPasswordPage extends StatelessWidget {
   final emailController = TextEditingController();
@@ -41,7 +42,7 @@ class ForgotPasswordPage extends StatelessWidget {
             const SizedBox(height: 20),
             AppButton(
               text: "送出",
-              onPressed: () {
+              onPressed: () async {
                 final email = emailController.text.trim();
                 if (email.isEmpty) {
                   showAppDialog(
@@ -50,13 +51,26 @@ class ForgotPasswordPage extends StatelessWidget {
                     title: "錯誤",
                     message: "請輸入電子信箱",
                   );
-                } else {
-                  // TODO: 寄送重設信件
+                  return;
+                }
+
+                try {
+                  final userService = UserService();
+                  await userService.sendResetLink(email);
+
                   showAppDialog(
                     context: context,
                     type: AppDialogType.success,
                     title: "已寄送",
                     message: "請查看您的信箱以完成重設密碼流程。",
+                    onClose: () => Navigator.pop(context),
+                  );
+                } catch (e) {
+                  showAppDialog(
+                    context: context,
+                    type: AppDialogType.error,
+                    title: "發送失敗",
+                    message: e.toString().replaceFirst('Exception: ', ''),
                   );
                 }
               },

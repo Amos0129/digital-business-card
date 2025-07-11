@@ -3,6 +3,14 @@ package com.emfabro.template.service;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.emfabro.global.exception.BadRequestException;
+import com.emfabro.global.exception.ForbiddenException;
+import com.emfabro.global.exception.NotFoundException;
 import com.emfabro.template.dao.UserDao;
 import com.emfabro.template.domain.entity.User;
 import com.emfabro.template.dto.UserForgotPasswordDto;
@@ -22,6 +30,8 @@ public class UserService {
     private final UserDao.Jpa userJpa;
     private final GroupService groupService;
     private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
 
     public Optional<User> findById(Integer userId) {
         return userJpa.findById(userId);
@@ -33,44 +43,67 @@ public class UserService {
         return new UserLoginResponseDto(user.getId(), user.getEmail(), user.getName(), token);
     }
 
-    // 🔍 查詢用：依 Email 找 User 資料
     public Optional<User> findByEmail(String email) {
         return userJpa.findByEmail(email);
     }
 
-    // ✅ 驗證 Email 是否存在
     public boolean existsByEmail(String email) {
         return userJpa.existsByEmail(email);
     }
 
     public void sendResetLink(UserForgotPasswordDto dto) {
-        // TODO: 這裡可以實作寄送 reset link 的邏輯
-        System.out.println("模擬寄送 reset link 到: " + dto.getEmail());
+        User user = userJpa.findByEmail(dto.getEmail())
+                           .orElseThrow(() -> new BadRequestException("找不到該帳號"));
+
+        String resetToken = jwtUtil.generatePasswordResetToken(user.getId());
+        String resetUrl = "http://192.168.205.58:5566/reset-password?token=" + resetToken;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(user.getEmail());
+        message.setSubject("密碼重設連結");
+        message.setText("請點擊以下連結重設密碼：\n" + resetUrl + "\n此連結15分鐘內有效。");
+
+        mailSender.send(message);
+
+        System.out.println("已發送密碼重設信至：" + user.getEmail());
     }
 
-    // ✅ 註冊邏輯：接收 DTO，回傳 ResponseDto
+    public void resetPassword(String token, String newPassword) {
+        Integer userId;
+        try {
+            userId = jwtUtil.validatePasswordResetToken(token);
+        } catch (RuntimeException e) {
+            throw new BadRequestException("重設密碼連結無效或已過期");
+        }
+
+        User user = userJpa.findById(userId)
+                           .orElseThrow(() -> new NotFoundException("找不到使用者"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userJpa.save(user);
+    }
+
     public UserResponseDto register(UserRegisterDto dto) {
-        String defaultName = dto.getEmail().split("@")[0]; // 暫用 email 當 name
+        String defaultName = dto.getEmail().split("@")[0];
         User user = createUser(defaultName, dto.getEmail(), dto.getPassword());
         return new UserResponseDto(user.getId(), user.getEmail(), user.getName());
     }
 
-    // ✅ 登入邏輯：驗證密碼，成功回傳 ResponseDto
     public UserResponseDto login(UserLoginDto dto) {
         User user = login(dto.getEmail(), dto.getPassword());
         return new UserResponseDto(user.getId(), user.getEmail(), user.getName());
     }
 
-    // 🔐 驗證帳號密碼（僅限內部使用）
     public User login(String email, String password) {
         return userJpa.findByEmail(email)
-                      .filter(user -> user.getPassword().equals(password))
-                      .orElseThrow(() -> new RuntimeException("帳號或密碼錯誤"));
+                      .filter(user -> passwordEncoder.matches(password, user.getPassword()))
+                      .orElseThrow(() -> new BadRequestException("帳號或密碼錯誤"));
     }
 
     public void updateDisplayName(Integer userId, String name) {
         User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("找不到使用者"));
+                           .orElseThrow(() -> new NotFoundException("找不到使用者"));
 
         user.setName(name);
         user.setUpdatedAt(LocalDateTime.now());
@@ -79,33 +112,31 @@ public class UserService {
 
     public void changePassword(Integer userId, String oldPassword, String newPassword) {
         User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("找不到使用者"));
+                           .orElseThrow(() -> new NotFoundException("找不到使用者"));
 
-        if (!user.getPassword().equals(oldPassword)) {
-            throw new RuntimeException("舊密碼錯誤");
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new ForbiddenException("舊密碼錯誤");
         }
 
-        user.setPassword(newPassword);
+        user.setPassword(passwordEncoder.encode(newPassword));
         user.setUpdatedAt(LocalDateTime.now());
         userJpa.save(user);
     }
 
-    // ➕ 建立新使用者帳號（僅限內部使用）
     public User createUser(String name, String email, String password) {
         if (userJpa.existsByEmail(email)) {
-            throw new RuntimeException("此帳號已被註冊");
+            throw new BadRequestException("此帳號已被註冊");
         }
 
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPassword(password);
+        user.setPassword(passwordEncoder.encode(password));
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser = userJpa.save(user);
 
-        // ✅ 建立預設群組
         String[] defaultGroups = { "客戶", "朋友", "家人" };
         for (String groupName : defaultGroups) {
             groupService.createGroup(savedUser.getId(), groupName);
@@ -114,3 +145,4 @@ public class UserService {
         return savedUser;
     }
 }
+

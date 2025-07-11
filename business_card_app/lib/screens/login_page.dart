@@ -179,14 +179,28 @@ class _LoginPageState extends State<LoginPage> {
                   AppButton(
                     text: "以 Google 登入",
                     icon: const Icon(Icons.g_mobiledata, size: 28),
-                    onPressed: () {},
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        type: AppDialogType.error,
+                        title: "尚未開放",
+                        message: "目前尚未開放 Google 登入功能，敬請期待。",
+                      );
+                    },
                     filled: false,
                   ),
                   const SizedBox(height: 10),
                   AppButton(
                     text: "以 Apple 登入",
                     icon: const Icon(Icons.apple),
-                    onPressed: () {},
+                    onPressed: () {
+                      showAppDialog(
+                        context: context,
+                        type: AppDialogType.error,
+                        title: "尚未開放",
+                        message: "目前尚未開放 Apple 登入功能，敬請期待。",
+                      );
+                    },
                     filled: false,
                   ),
                   const SizedBox(height: 20),

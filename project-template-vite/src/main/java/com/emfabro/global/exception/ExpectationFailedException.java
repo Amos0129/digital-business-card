@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class ExpectationFailedException extends Exception {
+public class ExpectationFailedException extends RuntimeException {
 
     public ExpectationFailedException(String message) {
         super(message);

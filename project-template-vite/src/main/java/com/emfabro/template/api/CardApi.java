@@ -3,6 +3,7 @@ package com.emfabro.template.api;
 import com.emfabro.template.domain.entity.Card;
 import com.emfabro.template.dto.CardDetailDto;
 import com.emfabro.template.dto.CardRequestDto;
+import com.emfabro.template.dto.UploadResultDto;
 import com.emfabro.template.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,20 +18,20 @@ public class CardApi {
 
     private final CardService cardService;
 
-    // ✅ 取得目前登入者的名片清單
+    // 取得目前登入者的名片清單
     @GetMapping("/my")
     public List<CardDetailDto> getMyCards(@RequestAttribute("userId") Integer userId) {
         return cardService.getCardsByUserId(userId);
     }
 
-    // ✅ 建立目前登入者的名片
+    // 建立目前登入者的名片
     @PostMapping("/my")
     public CardDetailDto createMyCard(@RequestAttribute("userId") Integer userId,
             @RequestBody CardRequestDto cardDto) {
         return cardService.createCard(cardDto, userId);
     }
 
-    // ✅ 更新指定名片
+    // 更新指定名片
     @PutMapping("/{cardId}")
     public CardDetailDto updateCard(@PathVariable Integer cardId,
             @RequestBody CardRequestDto cardDto,
@@ -38,7 +39,7 @@ public class CardApi {
         return cardService.updateCard(cardId, cardDto, userId);
     }
 
-    // ✅ 刪除名片
+    // 刪除名片
     @DeleteMapping("/{cardId}")
     public void deleteCard(@PathVariable Integer cardId,
             @RequestAttribute("userId") Integer userId) {
@@ -58,11 +59,12 @@ public class CardApi {
     }
 
     @PostMapping("/{cardId}/avatar")
-    public String uploadAvatar(
+    public UploadResultDto uploadAvatar(
             @PathVariable Integer cardId,
             @RequestParam("file") MultipartFile file,
             @RequestAttribute("userId") Integer userId) {
-        return cardService.uploadAvatar(cardId, file, userId);
+        String avatarUrl = cardService.uploadAvatar(cardId, file, userId);
+        return new UploadResultDto(avatarUrl);
     }
 
     @PatchMapping("/{cardId}/clear-avatar")
