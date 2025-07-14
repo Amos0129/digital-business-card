@@ -21,6 +21,14 @@ class CardGroupViewModel extends ChangeNotifier {
   String _selectedGroup = '全部';
   ViewMode _viewMode = ViewMode.card;
 
+  bool includePublicCards = false;
+
+  void setIncludePublic(bool value) {
+    includePublicCards = value;
+    loadCards(); // 當切換搜尋範圍時自動重新載入
+    notifyListeners();
+  }
+
   List<GroupModel> get groups => _groups;
   List<UnifiedCard> get cards => _cards;
   Set<String> get selectedCardIds => _selectedCardIds;
@@ -75,7 +83,31 @@ class CardGroupViewModel extends ChangeNotifier {
 
         _cards.add(unifiedCard);
       }
+
+      // ✅ 若開啟 includePublicCards，載入公開卡片（不是自己的）
+      if (includePublicCards) {
+        final publicCards = await _cardService.searchPublicCards(
+          query: searchController.text.trim(),
+        );
+
+        for (var json in publicCards) {
+          final cardId = json['id'] as int;
+          if (!seenCardIds.add(cardId)) continue;
+
+          json['groupId'] = null;
+          json['groupName'] = '公開名片';
+
+          final cardResponse = CardResponse.fromJson(json);
+          final unifiedCard = cardResponse.toUnifiedCard().copyWith(
+            isScanned: true, // 或其他識別方式
+            group: '公開名片',
+          );
+
+          _cards.add(unifiedCard);
+        }
+      }
     } else {
+      // 👇 群組內不搜尋公開名片
       final group = _groups.firstWhere((g) => g.name == _selectedGroup);
       final rawCards = await _cardGroupService.getCardsByGroup(group.id);
 
@@ -155,16 +187,29 @@ class CardGroupViewModel extends ChangeNotifier {
 
     for (final id in _selectedCardIds) {
       final index = _cards.indexWhere((c) => c.id == id);
-      if (index != -1 && _cards[index].cardId != null) {
-        await _cardGroupService.changeCardGroup(
-          _cards[index].cardId!,
-          group.id,
-        );
-        _cards[index] = _cards[index].copyWith(
-          group: group.name,
-          groupId: group.id,
-        );
+      if (index == -1 || _cards[index].cardId == null) continue;
+
+      final cardIdInt = _cards[index].cardId!;
+
+      try {
+        // 🟡 對於公開名片（不是自己的卡），你必須先加進群組
+        await _cardGroupService.addCardToGroup(cardIdInt, group.id);
+      } catch (e) {
+        print('🟡 卡片可能已經存在於該群組: $e');
       }
+
+      try {
+        // ✅ 對於自己的卡，允許變更歸屬群組
+        await _cardGroupService.changeCardGroup(cardIdInt, group.id);
+      } catch (e) {
+        print('❌ 變更群組失敗: $e');
+      }
+
+      // 更新前端資料
+      _cards[index] = _cards[index].copyWith(
+        group: group.name,
+        groupId: group.id,
+      );
     }
 
     await loadCards();
@@ -177,11 +222,24 @@ class CardGroupViewModel extends ChangeNotifier {
     final index = _cards.indexWhere((c) => c.id == cardId);
 
     if (index != -1 && _cards[index].cardId != null) {
-      await _cardGroupService.changeCardGroup(_cards[index].cardId!, group.id);
+      final cardIdInt = _cards[index].cardId!;
+
+      try {
+        // 先建立對應，確保你有權限 change
+        await _cardGroupService.addCardToGroup(cardIdInt, group.id);
+      } catch (e) {
+        print('卡片可能已經加入過群組: $e');
+      }
+
+      // 再執行變更群組
+      await _cardGroupService.changeCardGroup(cardIdInt, group.id);
+
+      // 更新本地卡片狀態
       _cards[index] = _cards[index].copyWith(
         group: group.name,
         groupId: group.id,
       );
+
       notifyListeners();
     }
   }

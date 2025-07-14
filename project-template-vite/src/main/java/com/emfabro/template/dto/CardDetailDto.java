@@ -24,6 +24,7 @@ public class CardDetailDto {
     private Boolean instagram;
     private Boolean line;
     private Boolean threads;
+    private Boolean isPublic;
 
     // ✅ 這段就是你要加的
     public CardDetailDto(
@@ -70,6 +71,7 @@ public class CardDetailDto {
         dto.setInstagram(card.getInstagram());
         dto.setLine(card.getLine());
         dto.setThreads(card.getThreads());
+        dto.setIsPublic(card.getIsPublic());
         return dto;
     }
 }

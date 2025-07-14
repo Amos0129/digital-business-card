@@ -19,6 +19,7 @@ class UnifiedCard {
   final String? style;
   final bool isScanned;
   final bool isPaperBased;
+  final bool isPublic;
   final DateTime createdAt;
 
   // 社群媒體
@@ -46,6 +47,7 @@ class UnifiedCard {
     this.style,
     this.isScanned = false,
     this.isPaperBased = false,
+    this.isPublic = false,
     DateTime? createdAt,
     this.hasFb = false,
     this.hasIg = false,
@@ -176,6 +178,7 @@ class UnifiedCard {
     String? igUrl,
     String? lineUrl,
     String? threadsUrl,
+    bool? isPublic,
   }) {
     return UnifiedCard(
       cardId: cardId ?? this.cardId,
@@ -201,6 +204,7 @@ class UnifiedCard {
       igUrl: igUrl ?? this.igUrl,
       lineUrl: lineUrl ?? this.lineUrl,
       threadsUrl: threadsUrl ?? this.threadsUrl,
+      isPublic: isPublic ?? this.isPublic,
     );
   }
 }

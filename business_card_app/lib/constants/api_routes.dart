@@ -43,6 +43,14 @@ class ApiRoutes {
   static Uri uploadAvatar(int cardId) =>
       Uri.parse('$base/api/cards/$cardId/avatar');
 
+  static Uri searchPublicCards(String query) => Uri.parse(
+    '$base/api/cards/public/search',
+  ).replace(queryParameters: {'query': query});
+
+  static Uri updateCardPublic(int cardId, bool value) => Uri.parse(
+    '$base/api/cards/$cardId/public',
+  ).replace(queryParameters: {'value': value.toString()});
+
   static Uri clearAvatar(int cardId) =>
       Uri.parse('$base/api/cards/$cardId/clear-avatar');
 

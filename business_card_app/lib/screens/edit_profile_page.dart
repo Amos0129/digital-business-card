@@ -42,6 +42,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String _selectedStyleId = 'default';
   String? _avatarUrl;
   int? _cardId;
+  bool _isPublic = true;
 
   @override
   void initState() {
@@ -90,6 +91,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       lineUrl: _lineController.text,
       threadsUrl: _threadsController.text,
       avatarUrl: _avatarUrl,
+      isPublic: _isPublic,
     );
   }
 
@@ -128,6 +130,69 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 keyboardType: TextInputType.emailAddress,
               ),
               AppTextFormField(label: '地址', controller: _addressController),
+
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            '是否公開名片',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            '開啟後，其他用戶可透過掃描或搜尋看到你',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _isPublic,
+                      onChanged: (val) async {
+                        setState(() => _isPublic = val);
+                        if (_cardId != null) {
+                          try {
+                            await cardService.updatePublicStatus(_cardId!, val);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(val ? '名片已設為公開' : '名片已設為私密'),
+                              ),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('更新公開狀態失敗: $e')),
+                            );
+                          }
+                        }
+                      },
+                      activeColor: const Color(0xFF4A6CFF),
+                    ),
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 24),
               _buildSectionTitle('名片樣式'),
@@ -269,6 +334,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _hasThreads = card.threadsUrl?.isNotEmpty == true;
 
           _avatarUrl = card.avatarUrl;
+          _isPublic = card.isPublic;
         });
       }
     } catch (e) {

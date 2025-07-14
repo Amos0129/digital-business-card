@@ -47,9 +47,18 @@ public class CardApi {
     }
 
     // ✅ 查詢公開的名片（可給其他人看）
-    @GetMapping("/user/{userId}/public")
-    public List<CardDetailDto> getPublicCardsByUserId(@PathVariable Integer userId) {
-        return cardService.getPublicCardsByUserId(userId);
+    @GetMapping("/public/search")
+    public List<CardDetailDto> searchPublicCards(@RequestParam(required = false) String query) {
+        return cardService.searchPublicCards(query);
+    }
+
+    @PutMapping("/{cardId}/public")
+    public void updatePublicStatus(
+            @PathVariable Integer cardId,
+            @RequestParam boolean value,
+            @RequestAttribute("userId") Integer userId
+    ) {
+        cardService.updatePublicStatus(cardId, userId, value);
     }
 
     // ✅ 查詢單一名片（用於掃描 QR code 或分享）

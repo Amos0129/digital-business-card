@@ -12,6 +12,32 @@ class CardService {
 
   CardService({ApiClient? apiClient}) : api = apiClient ?? ApiClient();
 
+  Future<List<Map<String, dynamic>>> searchPublicCards({
+    required String query,
+  }) async {
+    final url = ApiRoutes.searchPublicCards(query);
+    final response = await api.get(url, auth: false);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    } else {
+      final msg = _parseError(response.body);
+      throw Exception('搜尋公開名片失敗: $msg');
+    }
+  }
+
+  Future<void> updatePublicStatus(int cardId, bool value) async {
+    final url = Uri.parse(
+      '${ApiRoutes.base}/api/cards/$cardId/public?value=$value',
+    );
+    final response = await api.put(url, null, auth: true); // PUT with no body
+
+    if (response.statusCode != 200) {
+      final msg = _parseError(response.body);
+      throw Exception('更新公開狀態失敗: $msg');
+    }
+  }
+
   Future<void> updateCard(int cardId, CardRequest card) async {
     final url = ApiRoutes.updateCard(cardId);
     final response = await api.put(url, card.toJson(), auth: true);

@@ -1,4 +1,1 @@
-enum ViewMode {
-  card,
-  list,
-}
+enum ViewMode { card, list }

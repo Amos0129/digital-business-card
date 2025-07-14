@@ -19,6 +19,7 @@ class CardResponse {
   final int? groupId;
   final String? groupName;
   final String? avatarUrl;
+  final bool isPublic;
 
   CardResponse({
     required this.id,
@@ -32,6 +33,7 @@ class CardResponse {
     required this.instagram,
     required this.line,
     required this.threads,
+    required this.isPublic,
     this.facebookUrl,
     this.instagramUrl,
     this.lineUrl,
@@ -61,6 +63,7 @@ class CardResponse {
       groupId: json['groupId'],
       groupName: json['groupName'],
       avatarUrl: json['avatarUrl'],
+      isPublic: json['isPublic'] ?? false,
     );
   }
 
@@ -84,6 +87,7 @@ class CardResponse {
       'groupId': groupId,
       'groupName': groupName,
       'avatarUrl': avatarUrl,
+      'isPublic': isPublic,
     };
   }
 
@@ -109,6 +113,7 @@ class CardResponse {
       groupId: groupId,
       group: groupName,
       avatarUrl: fullAvatarUrl,
+      isPublic: isPublic,
     );
   }
 

@@ -14,6 +14,7 @@ class CardRequest {
   final String? lineUrl;
   final String? threadsUrl;
   final String? avatarUrl;
+  final bool isPublic;
 
   CardRequest({
     required this.name,
@@ -26,6 +27,7 @@ class CardRequest {
     required this.instagram,
     required this.line,
     required this.threads,
+    required this.isPublic, // 默認為不公開名片
     this.facebookUrl,
     this.instagramUrl,
     this.lineUrl,
@@ -49,5 +51,6 @@ class CardRequest {
     'lineUrl': lineUrl,
     'threadsUrl': threadsUrl,
     'avatarUrl': avatarUrl,
+    'isPublic': isPublic,
   };
 }

@@ -33,13 +33,31 @@ public class CardService {
                       .collect(Collectors.toList());
     }
 
-    public List<CardDetailDto> getPublicCardsByUserId(Integer userId) {
-        User user = userJpa.findById(userId)
-                           .orElseThrow(() -> new RuntimeException("使用者不存在"));
-        return cardJpa.findByUserAndIsPublicTrue(user)
-                      .stream()
-                      .map(CardDetailDto::fromEntity)
-                      .collect(Collectors.toList());
+    public List<CardDetailDto> searchPublicCards(String query) {
+        List<Card> cards;
+
+        if (query == null || query.trim().isEmpty()) {
+            // 如果沒有輸入關鍵字，就撈全部公開名片
+            cards = cardJpa.findByIsPublicTrue();
+        } else {
+            // 有輸入關鍵字時，搜尋名稱或公司有包含該關鍵字的公開名片
+            String keyword = "%" + query.trim().toLowerCase() + "%";
+            cards = cardJpa.searchPublicCardsByKeyword(keyword);
+        }
+
+        return cards.stream()
+                    .map(CardDetailDto::fromEntity)
+                    .collect(Collectors.toList());
+    }
+
+    public void updatePublicStatus(Integer cardId, Integer userId, boolean isPublic) {
+        Card card = cardRepository.findByIdAndUserId(cardId, userId)
+                                  .orElseThrow(() -> new RuntimeException("名片不存在或無權限"));
+
+        card.setIsPublic(isPublic);
+        card.setUpdatedAt(LocalDateTime.now());
+
+        cardRepository.save(card);
     }
 
     public CardDetailDto getCardById(Integer cardId) {
