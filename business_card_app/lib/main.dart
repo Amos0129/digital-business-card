@@ -20,11 +20,17 @@ import 'viewmodels/group_manager_viewmodel.dart';
 import '../providers/user_provider.dart';
 import '../screens/splash_page.dart';
 import '../screens/reset_password_page.dart';
+import 'package:hive/hive.dart';
+import 'package:path_provider/path_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🐝 初始化 Hive 儲存路徑
+  final dir = await getApplicationDocumentsDirectory();
+  Hive.init(dir.path); // 📦 初始化 Hive
 
   final prefs = await SharedPreferences.getInstance();
   final langCode = prefs.getString('languageCode') ?? 'zh';

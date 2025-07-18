@@ -46,6 +46,14 @@ class _HomePageState extends State<HomePage> {
 
     try {
       final cards = await cardService.getMyCards();
+
+      // 印出是來自快取還是 API
+      if (cardService.lastCardsFromCache == true) {
+        debugPrint('📦 名片資料來自快取');
+      } else {
+        debugPrint('🌐 名片資料來自 API');
+      }
+
       setState(() {
         _card = cards.isNotEmpty ? cards.first : null;
         _loading = false;

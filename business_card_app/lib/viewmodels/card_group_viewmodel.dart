@@ -6,6 +6,7 @@ import '../services/card_group_service.dart';
 import '../services/card_service.dart';
 import '../enums/view_mode.dart';
 import '../models/card_response.dart';
+import 'package:hive/hive.dart';
 
 class CardGroupViewModel extends ChangeNotifier {
   final TextEditingController searchController = TextEditingController();
@@ -67,62 +68,81 @@ class CardGroupViewModel extends ChangeNotifier {
     _cards = []; // 清空
     final seenCardIds = <int>{};
 
-    if (_selectedGroup == '全部') {
-      final rawCards = await _cardGroupService.getCardsByUser();
+    try {
+      if (_selectedGroup == '全部') {
+        List<Map<String, dynamic>> rawCards = [];
+        final box = await Hive.openBox('cardGroupBox');
 
-      for (var json in rawCards) {
-        final cardId = json['id'] as int;
-        if (!seenCardIds.add(cardId)) continue;
+        try {
+          rawCards = await _cardGroupService.getCardsByUser();
+        } catch (e) {
+          debugPrint('⚠️ 無法從 API 取得卡片，改用本地快取：$e');
+          final cached = box.get('userCardGroups');
+          if (cached != null && cached is List) {
+            try {
+              rawCards = List<Map<String, dynamic>>.from(cached);
+              debugPrint('✅ 成功使用快取資料');
+            } catch (e) {
+              debugPrint('❌ 快取格式錯誤：$e');
+            }
+          }
+        }
 
-        final group = await _cardGroupService.getGroupOfCardForUser(cardId);
-        json['groupId'] = group?.groupId;
-        json['groupName'] = group?.groupName ?? '未分類';
-
-        final cardResponse = CardResponse.fromJson(json);
-        final unifiedCard = cardResponse.toUnifiedCard();
-
-        _cards.add(unifiedCard);
-      }
-
-      // ✅ 若開啟 includePublicCards，載入公開卡片（不是自己的）
-      if (includePublicCards) {
-        final publicCards = await _cardService.searchPublicCards(
-          query: searchController.text.trim(),
-        );
-
-        for (var json in publicCards) {
+        for (var json in rawCards) {
           final cardId = json['id'] as int;
           if (!seenCardIds.add(cardId)) continue;
 
-          json['groupId'] = null;
-          json['groupName'] = '公開名片';
+          // ✅ 只有在快取資料沒有 group 時才重新抓
+          if (!json.containsKey('groupId') || !json.containsKey('groupName')) {
+            try {
+              final group = await _cardGroupService.getGroupOfCardForUser(
+                cardId,
+              );
+              json['groupId'] = group?.groupId;
+              json['groupName'] = group?.groupName ?? '未分類';
+            } catch (_) {
+              json['groupId'] = null;
+              json['groupName'] = '未分類';
+            }
+          }
 
           final cardResponse = CardResponse.fromJson(json);
-          final unifiedCard = cardResponse.toUnifiedCard().copyWith(
-            isScanned: true, // 或其他識別方式
-            group: '公開名片',
-          );
+          final unifiedCard = cardResponse.toUnifiedCard();
 
           _cards.add(unifiedCard);
         }
+
+        // ✅ 公開名片還是用原本 API 搜尋方式（可以選擇不處理離線）
+        if (includePublicCards) {
+          try {
+            final publicCards = await _cardService.searchPublicCards(
+              query: searchController.text.trim(),
+            );
+
+            for (var json in publicCards) {
+              final cardId = json['id'] as int;
+              if (!seenCardIds.add(cardId)) continue;
+
+              json['groupId'] = null;
+              json['groupName'] = '公開名片';
+
+              final cardResponse = CardResponse.fromJson(json);
+              final unifiedCard = cardResponse.toUnifiedCard().copyWith(
+                isScanned: true,
+                group: '公開名片',
+              );
+
+              _cards.add(unifiedCard);
+            }
+          } catch (e) {
+            debugPrint('⚠️ 公開名片讀取失敗（可忽略）：$e');
+          }
+        }
+        await box.put('userCardGroups', rawCards);
       }
-    } else {
-      // 👇 群組內不搜尋公開名片
-      final group = _groups.firstWhere((g) => g.name == _selectedGroup);
-      final rawCards = await _cardGroupService.getCardsByGroup(group.id);
-
-      for (var json in rawCards) {
-        final cardId = json['id'] as int;
-        if (!seenCardIds.add(cardId)) continue;
-
-        json['groupId'] = group.id;
-        json['groupName'] = group.name;
-
-        final cardResponse = CardResponse.fromJson(json);
-        final unifiedCard = cardResponse.toUnifiedCard();
-
-        _cards.add(unifiedCard);
-      }
+    } catch (e) {
+      debugPrint('❌ 載入卡片失敗（可能是斷網）：$e');
+      // 這裡建議你保留之前讀過的快取資料，不清空 _cards，或者提示「目前為離線狀態」。
     }
 
     notifyListeners();

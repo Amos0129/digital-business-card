@@ -6,9 +6,12 @@ import '../models/card_request.dart';
 import '../models/card_response.dart';
 import '../constants/api_routes.dart';
 import '../services/api_client.dart';
+import '../services/local_storage_service.dart';
 
 class CardService {
   final ApiClient api;
+  bool? lastCardsFromCache;
+  bool? lastFromCache;
 
   CardService({ApiClient? apiClient}) : api = apiClient ?? ApiClient();
 
@@ -36,6 +39,8 @@ class CardService {
       final msg = _parseError(response.body);
       throw Exception('更新公開狀態失敗: $msg');
     }
+
+    await _clearMyCardsCache();
   }
 
   Future<void> updateCard(int cardId, CardRequest card) async {
@@ -46,15 +51,34 @@ class CardService {
       final msg = _parseError(response.body);
       throw Exception('更新失敗: $msg');
     }
+    await _clearMyCardsCache();
   }
 
   Future<List<CardResponse>> getMyCards() async {
+    const boxName = 'cardsBox';
+    const key = 'myCards';
+
+    // 👉 嘗試讀快取
+    final cached = await LocalStorageService.getData(boxName, key);
+    if (cached != null && cached is List) {
+      try {
+        final cards = (cached as List)
+            .map((e) => CardResponse.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        lastCardsFromCache = true; // ✅ 來自快取
+        return cards;
+      } catch (_) {}
+    }
+
+    // 👉 fallback：打 API
     final url = ApiRoutes.getMyCards();
     final response = await api.get(url, auth: true);
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonList = jsonDecode(response.body);
-      return jsonList.map((e) => CardResponse.fromJson(e)).toList();
+      final jsonList = jsonDecode(response.body);
+      await LocalStorageService.saveData(boxName, key, jsonList);
+      lastCardsFromCache = false; // ✅ 來自 API
+      return (jsonList as List).map((e) => CardResponse.fromJson(e)).toList();
     } else {
       final msg = _parseError(response.body);
       throw Exception('取得名片失敗: $msg');
@@ -62,11 +86,26 @@ class CardService {
   }
 
   Future<CardResponse> getCardById(int cardId) async {
+    final boxName = 'cardsBox';
+    final key = 'card_$cardId';
+
+    final cached = await LocalStorageService.getData(boxName, key);
+    if (cached != null) {
+      try {
+        lastFromCache = true;
+        return CardResponse.fromJson(Map<String, dynamic>.from(cached));
+      } catch (_) {}
+    }
+
+    // fallback：打 API
     final url = ApiRoutes.getCardById(cardId);
     final response = await api.get(url, auth: true);
 
     if (response.statusCode == 200) {
-      return CardResponse.fromJson(jsonDecode(response.body));
+      final json = jsonDecode(response.body);
+      await LocalStorageService.saveData(boxName, key, json);
+      lastFromCache = false;
+      return CardResponse.fromJson(json);
     } else {
       final msg = _parseError(response.body);
       throw Exception('查詢名片失敗: $msg');
@@ -111,6 +150,7 @@ class CardService {
       final msg = _parseError(response.body);
       throw Exception('清除頭像失敗: $msg');
     }
+    await _clearMyCardsCache();
   }
 
   Future<void> createCard(CardRequest card) async {
@@ -121,6 +161,7 @@ class CardService {
       final msg = _parseError(response.body);
       throw Exception('建立名片失敗: $msg');
     }
+    await _clearMyCardsCache();
   }
 
   String _parseError(String body) {
@@ -131,5 +172,11 @@ class CardService {
       }
     } catch (_) {}
     return body;
+  }
+
+  Future<void> _clearMyCardsCache() async {
+    const boxName = 'cardsBox';
+    const key = 'myCards';
+    await LocalStorageService.deleteData(boxName, key);
   }
 }
