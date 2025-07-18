@@ -1,1 +1,0 @@
-enum ViewMode { card, list }
