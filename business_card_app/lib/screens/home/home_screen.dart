@@ -1,4 +1,3 @@
-// lib/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
@@ -53,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
             return Center(child: CircularProgressIndicator());
           }
 
-          if (cardProvider.cards.isEmpty) {
+          if (cardProvider.myCards.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -87,9 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onRefresh: _loadData,
             child: ListView.builder(
               padding: EdgeInsets.all(16),
-              itemCount: cardProvider.cards.length,
+              itemCount: cardProvider.myCards.length,
               itemBuilder: (context, index) {
-                final card = cardProvider.cards[index];
+                final card = cardProvider.myCards[index];
                 return CardItem(
                   card: card,
                   onTap: () {
@@ -117,6 +116,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, AppRoutes.groups);
               break;
             case 2:
+              Navigator.pushNamed(context, AppRoutes.search);
+              break;
+            case 3:
               Navigator.pushNamed(context, AppRoutes.profile);
               break;
           }

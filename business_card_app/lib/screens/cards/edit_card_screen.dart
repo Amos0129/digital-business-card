@@ -1,4 +1,3 @@
-// lib/screens/cards/edit_card_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -37,7 +36,7 @@ class _EditCardScreenState extends State<EditCardScreen> {
   bool _instagram = false;
   bool _line = false;
   bool _threads = false;
-  String _selectedStyle = 'modern';
+  String _selectedStyle = 'default';
   File? _avatarFile;
   String? _avatarUrl;
 
@@ -52,10 +51,10 @@ class _EditCardScreenState extends State<EditCardScreen> {
   void _loadCardData() {
     final card = widget.card!;
     _nameController.text = card.name;
-    _companyController.text = card.company;
+    _companyController.text = card.company ?? '';
     _positionController.text = card.position ?? '';
-    _phoneController.text = card.phone;
-    _emailController.text = card.email;
+    _phoneController.text = card.phone ?? '';
+    _emailController.text = card.email ?? '';
     _addressController.text = card.address ?? '';
     _facebookUrlController.text = card.facebookUrl ?? '';
     _instagramUrlController.text = card.instagramUrl ?? '';
@@ -64,11 +63,11 @@ class _EditCardScreenState extends State<EditCardScreen> {
     
     setState(() {
       _isPublic = card.isPublic;
-      _facebook = card.facebook;
-      _instagram = card.instagram;
-      _line = card.line;
-      _threads = card.threads;
-      _selectedStyle = card.style ?? 'modern';
+      _facebook = card.facebook ?? false;
+      _instagram = card.instagram ?? false;
+      _line = card.line ?? false;
+      _threads = card.threads ?? false;
+      _selectedStyle = card.style ?? 'default';
       _avatarUrl = card.avatarUrl;
     });
   }
@@ -111,37 +110,42 @@ class _EditCardScreenState extends State<EditCardScreen> {
     try {
       final cardProvider = Provider.of<CardProvider>(context, listen: false);
       
-      final cardData = {
-        'name': _nameController.text,
-        'company': _companyController.text,
-        'position': _positionController.text,
-        'phone': _phoneController.text,
-        'email': _emailController.text,
-        'address': _addressController.text,
-        'style': _selectedStyle,
-        'isPublic': _isPublic,
-        'facebook': _facebook,
-        'instagram': _instagram,
-        'line': _line,
-        'threads': _threads,
-        'facebookUrl': _facebookUrlController.text,
-        'instagramUrl': _instagramUrlController.text,
-        'lineUrl': _lineUrlController.text,
-        'threadsUrl': _threadsUrlController.text,
-      };
+      final cardData = CardRequest(
+        name: _nameController.text,
+        company: _companyController.text.isEmpty ? null : _companyController.text,
+        position: _positionController.text.isEmpty ? null : _positionController.text,
+        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
+        email: _emailController.text.isEmpty ? null : _emailController.text,
+        address: _addressController.text.isEmpty ? null : _addressController.text,
+        style: _selectedStyle,
+        isPublic: _isPublic,
+        facebook: _facebook,
+        instagram: _instagram,
+        line: _line,
+        threads: _threads,
+        facebookUrl: _facebookUrlController.text.isEmpty ? null : _facebookUrlController.text,
+        instagramUrl: _instagramUrlController.text.isEmpty ? null : _instagramUrlController.text,
+        lineUrl: _lineUrlController.text.isEmpty ? null : _lineUrlController.text,
+        threadsUrl: _threadsUrlController.text.isEmpty ? null : _threadsUrlController.text,
+      );
 
-      BusinessCard savedCard;
+      bool success;
       if (widget.card == null) {
         // 建立新名片
-        savedCard = await cardProvider.createCard(cardData);
+        success = await cardProvider.createCard(cardData);
       } else {
         // 更新現有名片
-        savedCard = await cardProvider.updateCard(widget.card!.id, cardData);
+        success = await cardProvider.updateCard(widget.card!.id, cardData);
+      }
+
+      if (!success) {
+        throw Exception(widget.card == null ? '建立名片失敗' : '更新名片失敗');
       }
 
       // 如果有選擇頭像，上傳頭像
       if (_avatarFile != null) {
-        await cardProvider.uploadAvatar(savedCard.id, _avatarFile!);
+        final cardId = widget.card?.id ?? cardProvider.myCards.last.id;
+        await cardProvider.uploadAvatar(cardId, _avatarFile!);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +171,7 @@ class _EditCardScreenState extends State<EditCardScreen> {
           if (!_isLoading)
             TextButton(
               onPressed: _saveCard,
-              child: Text('儲存'),
+              child: Text('儲存', style: TextStyle(color: Colors.white)),
             ),
         ],
       ),
@@ -235,10 +239,6 @@ class _EditCardScreenState extends State<EditCardScreen> {
                     AppTextField(
                       controller: _companyController,
                       label: '公司',
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) return '請輸入公司';
-                        return null;
-                      },
                     ),
                     SizedBox(height: 16),
                     AppTextField(
@@ -250,21 +250,12 @@ class _EditCardScreenState extends State<EditCardScreen> {
                       controller: _phoneController,
                       label: '電話',
                       keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) return '請輸入電話';
-                        return null;
-                      },
                     ),
                     SizedBox(height: 16),
                     AppTextField(
                       controller: _emailController,
                       label: '電子郵件',
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) return '請輸入電子郵件';
-                        if (!value!.contains('@')) return '請輸入有效的電子郵件';
-                        return null;
-                      },
                     ),
                     SizedBox(height: 16),
                     AppTextField(
@@ -283,27 +274,39 @@ class _EditCardScreenState extends State<EditCardScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    Row(
+                    Column(
                       children: [
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: Text('現代'),
-                            value: 'modern',
-                            groupValue: _selectedStyle,
-                            onChanged: (value) {
-                              setState(() => _selectedStyle = value!);
-                            },
-                          ),
+                        RadioListTile<String>(
+                          title: Text('預設'),
+                          value: 'default',
+                          groupValue: _selectedStyle,
+                          onChanged: (value) {
+                            setState(() => _selectedStyle = value!);
+                          },
                         ),
-                        Expanded(
-                          child: RadioListTile<String>(
-                            title: Text('經典'),
-                            value: 'classic',
-                            groupValue: _selectedStyle,
-                            onChanged: (value) {
-                              setState(() => _selectedStyle = value!);
-                            },
-                          ),
+                        RadioListTile<String>(
+                          title: Text('簡約'),
+                          value: 'minimal',
+                          groupValue: _selectedStyle,
+                          onChanged: (value) {
+                            setState(() => _selectedStyle = value!);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: Text('粉色'),
+                          value: 'pink_card',
+                          groupValue: _selectedStyle,
+                          onChanged: (value) {
+                            setState(() => _selectedStyle = value!);
+                          },
+                        ),
+                        RadioListTile<String>(
+                          title: Text('薄荷'),
+                          value: 'mint_card',
+                          groupValue: _selectedStyle,
+                          onChanged: (value) {
+                            setState(() => _selectedStyle = value!);
+                          },
                         ),
                       ],
                     ),
@@ -399,6 +402,7 @@ class _EditCardScreenState extends State<EditCardScreen> {
                     AppButton(
                       text: widget.card == null ? '建立名片' : '更新名片',
                       onPressed: _saveCard,
+                      isLoading: _isLoading,
                     ),
                   ],
                 ),

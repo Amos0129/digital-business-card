@@ -50,6 +50,11 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // 檢查認證狀態（為了兼容 splash_screen.dart）
+  Future<void> checkAuthStatus() async {
+    await initialize();
+  }
+
   // 登入
   Future<bool> login(String email, String password) async {
     _setLoading(true);

@@ -154,6 +154,90 @@ class ApiClient {
       throw ApiException(AppConstants.errorUnknown, 0);
     }
   }
+
+  // 帶參數的POST請求
+  static Future<dynamic> postWithParams(String endpoint, Map<String, dynamic> params, {bool needAuth = false}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint').replace(
+      queryParameters: params.map((key, value) => MapEntry(key, value.toString())),
+    );
+    
+    try {
+      final headers = await _getHeaders(needAuth: needAuth);
+      final response = await http.post(uri, headers: headers).timeout(_timeout);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } on http.ClientException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(AppConstants.errorUnknown, 0);
+    }
+  }
+
+  // 帶參數的PUT請求
+  static Future<dynamic> putWithParams(String endpoint, Map<String, dynamic> params, {bool needAuth = false}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint').replace(
+      queryParameters: params.map((key, value) => MapEntry(key, value.toString())),
+    );
+    
+    try {
+      final headers = await _getHeaders(needAuth: needAuth);
+      final response = await http.put(uri, headers: headers).timeout(_timeout);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } on http.ClientException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(AppConstants.errorUnknown, 0);
+    }
+  }
+
+  // 帶參數的PATCH請求
+  static Future<dynamic> patchWithParams(String endpoint, Map<String, dynamic> params, {bool needAuth = false}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint').replace(
+      queryParameters: params.map((key, value) => MapEntry(key, value.toString())),
+    );
+    
+    try {
+      final headers = await _getHeaders(needAuth: needAuth);
+      final response = await http.patch(uri, headers: headers).timeout(_timeout);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } on http.ClientException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(AppConstants.errorUnknown, 0);
+    }
+  }
+
+  // 帶參數的DELETE請求
+  static Future<dynamic> deleteWithParams(String endpoint, Map<String, dynamic> params, {bool needAuth = false}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint').replace(
+      queryParameters: params.map((key, value) => MapEntry(key, value.toString())),
+    );
+    
+    try {
+      final headers = await _getHeaders(needAuth: needAuth);
+      final response = await http.delete(uri, headers: headers).timeout(_timeout);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } on http.ClientException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(AppConstants.errorUnknown, 0);
+    }
+  }
   
   // 檔案上傳
   static Future<dynamic> uploadFile(String endpoint, File file, {bool needAuth = false}) async {

@@ -16,6 +16,7 @@ class CardProvider extends ChangeNotifier {
 
   // Getters
   List<BusinessCard> get myCards => _myCards;
+  List<BusinessCard> get cards => _myCards; // 為了兼容 home_screen.dart 和 cards_screen.dart
   List<BusinessCard> get publicCards => _publicCards;
   BusinessCard? get selectedCard => _selectedCard;
   bool get isLoading => _isLoading;
@@ -45,7 +46,7 @@ class CardProvider extends ChangeNotifier {
   }
 
   // 搜尋公開名片
-  Future<void> searchPublicCards(String query) async {
+  Future<List<BusinessCard>> searchPublicCards(String query) async {
     _searchQuery = query;
     _setSearching(true);
     _clearError();
@@ -54,9 +55,11 @@ class CardProvider extends ChangeNotifier {
       final cards = await _cardService.searchPublicCards(query);
       _publicCards = cards;
       _setSearching(false);
+      return cards;
     } catch (e) {
       _setError(e.toString());
       _setSearching(false);
+      return [];
     }
   }
 
@@ -72,28 +75,66 @@ class CardProvider extends ChangeNotifier {
   }
 
   // 建立名片
-  Future<bool> createCard(CardRequest cardRequest) async {
+  Future<BusinessCard> createCard(Map<String, dynamic> cardData) async {
     _setLoading(true);
     _clearError();
 
     try {
+      final cardRequest = CardRequest(
+        name: cardData['name'],
+        company: cardData['company'],
+        position: cardData['position'],
+        phone: cardData['phone'],
+        email: cardData['email'],
+        address: cardData['address'],
+        style: cardData['style'],
+        isPublic: cardData['isPublic'] ?? false,
+        facebook: cardData['facebook'],
+        instagram: cardData['instagram'],
+        line: cardData['line'],
+        threads: cardData['threads'],
+        facebookUrl: cardData['facebookUrl'],
+        instagramUrl: cardData['instagramUrl'],
+        lineUrl: cardData['lineUrl'],
+        threadsUrl: cardData['threadsUrl'],
+      );
+      
       final newCard = await _cardService.createCard(cardRequest);
       _myCards.add(newCard);
       _setLoading(false);
-      return true;
+      return newCard;
     } catch (e) {
       _setError(e.toString());
       _setLoading(false);
-      return false;
+      rethrow;
     }
   }
 
   // 更新名片
-  Future<bool> updateCard(int cardId, CardRequest cardRequest) async {
+  Future<BusinessCard> updateCard(int cardId, Map<String, dynamic> cardData) async {
     _setLoading(true);
     _clearError();
 
     try {
+      final cardRequest = CardRequest(
+        name: cardData['name'],
+        company: cardData['company'],
+        position: cardData['position'],
+        phone: cardData['phone'],
+        email: cardData['email'],
+        address: cardData['address'],
+        style: cardData['style'],
+        isPublic: cardData['isPublic'] ?? false,
+        facebook: cardData['facebook'],
+        instagram: cardData['instagram'],
+        line: cardData['line'],
+        threads: cardData['threads'],
+        facebookUrl: cardData['facebookUrl'],
+        instagramUrl: cardData['instagramUrl'],
+        lineUrl: cardData['lineUrl'],
+        threadsUrl: cardData['threadsUrl'],
+      );
+      
       final updatedCard = await _cardService.updateCard(cardId, cardRequest);
       
       // 更新本地清單中的名片
@@ -108,16 +149,16 @@ class CardProvider extends ChangeNotifier {
       }
       
       _setLoading(false);
-      return true;
+      return updatedCard;
     } catch (e) {
       _setError(e.toString());
       _setLoading(false);
-      return false;
+      rethrow;
     }
   }
 
   // 刪除名片
-  Future<bool> deleteCard(int cardId) async {
+  Future<void> deleteCard(int cardId) async {
     _setLoading(true);
     _clearError();
 
@@ -133,11 +174,10 @@ class CardProvider extends ChangeNotifier {
       }
       
       _setLoading(false);
-      return true;
     } catch (e) {
       _setError(e.toString());
       _setLoading(false);
-      return false;
+      rethrow;
     }
   }
 
@@ -222,6 +262,36 @@ class CardProvider extends ChangeNotifier {
       _setError(e.toString());
       _setLoading(false);
       return false;
+    }
+  }
+
+  // 根據群組取得名片
+  Future<List<BusinessCard>> getCardsByGroup(int groupId) async {
+    try {
+      return await _cardService.getCardsByGroup(groupId);
+    } catch (e) {
+      _setError(e.toString());
+      return [];
+    }
+  }
+
+  // 將名片加入群組
+  Future<void> addCardToGroup(int cardId, int groupId) async {
+    try {
+      await _cardService.addCardToGroup(cardId, groupId);
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    }
+  }
+
+  // 將名片從群組移除
+  Future<void> removeCardFromGroup(int cardId, int groupId) async {
+    try {
+      await _cardService.removeCardFromGroup(cardId, groupId);
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
     }
   }
 

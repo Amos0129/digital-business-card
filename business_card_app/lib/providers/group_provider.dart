@@ -308,10 +308,10 @@ class GroupProvider extends ChangeNotifier {
   }
 
   // 清除特定群組的名片快取
-  void clearGroupCardsCache(int groupId) {
+  void clearGroupCacheById(int groupId) {
     _groupCardsCache.remove(groupId);
     notifyListeners();
-  }
+ }
 
   // 重新整理群組
   Future<void> refreshGroups() async {

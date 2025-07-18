@@ -62,6 +62,22 @@ class AppConstants {
   static const int maxImageSize = 5 * 1024 * 1024; // 5MB
 }
 
+// 路由常數
+class AppRoutes {
+  static const String home = '/home';
+  static const String login = '/login';
+  static const String register = '/register';
+  static const String forgotPassword = '/forgot-password';
+  static const String cards = '/cards';
+  static const String cardDetail = '/card-detail';
+  static const String editCard = '/edit-card';
+  static const String groups = '/groups';
+  static const String groupDetail = '/group-detail';
+  static const String profile = '/profile';
+  static const String qrScanner = '/qr-scanner';
+  static const String search = '/search';
+}
+
 // API端點
 class ApiEndpoints {
   // 使用者相關
