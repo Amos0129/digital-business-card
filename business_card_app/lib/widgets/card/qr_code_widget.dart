@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme.dart';
 
 class QRCodeWidget extends StatelessWidget {
@@ -7,8 +6,6 @@ class QRCodeWidget extends StatelessWidget {
   final double? size;
   final Color? foregroundColor;
   final Color? backgroundColor;
-  final String? logoAsset;
-  final double? logoSize;
   final bool showData;
   final EdgeInsetsGeometry? padding;
 
@@ -18,8 +15,6 @@ class QRCodeWidget extends StatelessWidget {
     this.size,
     this.foregroundColor,
     this.backgroundColor,
-    this.logoAsset,
-    this.logoSize,
     this.showData = false,
     this.padding,
   }) : super(key: key);
@@ -55,16 +50,41 @@ class QRCodeWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: QrImageView(
-        data: data,
-        version: QrVersions.auto,
-        size: size ?? 200,
-        foregroundColor: foregroundColor ?? Colors.black,
-        backgroundColor: backgroundColor ?? Colors.white,
-        errorCorrectionLevel: QrErrorCorrectLevel.M,
-        embeddedImage: logoAsset != null ? AssetImage(logoAsset!) : null,
-        embeddedImageStyle: QrEmbeddedImageStyle(
-          size: Size(logoSize ?? 40, logoSize ?? 40),
+      child: Container(
+        width: size ?? 200,
+        height: size ?? 200,
+        decoration: BoxDecoration(
+          color: foregroundColor ?? Colors.black,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.qr_code,
+                size: (size ?? 200) * 0.4,
+                color: backgroundColor ?? Colors.white,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'QR Code',
+                style: TextStyle(
+                  color: backgroundColor ?? Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'ID: $data',
+                style: TextStyle(
+                  color: (backgroundColor ?? Colors.white).withOpacity(0.8),
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -244,14 +264,12 @@ class BusinessCardQR extends StatelessWidget {
       title: '名片QR碼',
       description: cardName != null ? '$cardName 的名片' : '掃描此QR碼查看名片',
       onShare: () {
-        // TODO: 實作分享功能
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('分享功能開發中')),
         );
       },
       onSave: () {
-        // TODO: 實作儲存功能
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('儲存功能開發中')),
@@ -320,36 +338,3 @@ class QRCodeCard extends StatelessWidget {
     );
   }
 }
-
-// 使用範例：
-// 1. 基本QR碼
-// QRCodeWidget(data: "https://example.com")
-
-// 2. 自訂樣式QR碼
-// QRCodeWidget(
-//   data: "1234567890",
-//   size: 200,
-//   foregroundColor: Colors.blue,
-//   backgroundColor: Colors.white,
-//   showData: true,
-// )
-
-// 3. QR碼對話框
-// QRCodeDialog.show(
-//   context,
-//   data: cardId,
-//   title: "名片QR碼",
-//   description: "掃描查看名片",
-//   onShare: () => _shareQR(),
-// )
-
-// 4. 名片QR碼
-// BusinessCardQR.showDialog(context, cardId: "123", cardName: "張三")
-
-// 5. QR碼卡片
-// QRCodeCard(
-//   data: cardId,
-//   title: "我的名片",
-//   subtitle: "掃描分享",
-//   onTap: () => _showFullQR(),
-// )

@@ -1,4 +1,3 @@
-// lib/screens/groups/group_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/group_provider.dart';
@@ -33,13 +32,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       final cardProvider = Provider.of<CardProvider>(context, listen: false);
       
       // 取得群組資訊
-      final group = await groupProvider.getGroupById(widget.groupId);
+      final group = groupProvider.getGroupById(widget.groupId);
       
       // 取得群組內的名片
       final groupCards = await cardProvider.getCardsByGroup(widget.groupId);
       
       setState(() {
-        groupName = group.name;
+        groupName = group?.name ?? '未知群組';
         cards = groupCards;
         _isLoading = false;
       });

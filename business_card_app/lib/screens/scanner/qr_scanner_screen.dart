@@ -1,6 +1,4 @@
-// lib/screens/scanner/qr_scanner_screen.dart
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../providers/card_provider.dart';
 import '../../providers/group_provider.dart';
@@ -14,32 +12,13 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
   bool _isProcessing = false;
-
-  @override
-  void reassemble() {
-    super.reassemble();
-    if (controller != null) {
-      controller!.pauseCamera();
-      controller!.resumeCamera();
-    }
-  }
+  final TextEditingController _manualInputController = TextEditingController();
 
   @override
   void dispose() {
-    controller?.dispose();
+    _manualInputController.dispose();
     super.dispose();
-  }
-
-  void _onQRViewCreated(QRViewController controller) {
-    this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
-      if (!_isProcessing) {
-        _processQRData(scanData.code);
-      }
-    });
   }
 
   Future<void> _processQRData(String? qrData) async {
@@ -48,9 +27,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     setState(() => _isProcessing = true);
     
     try {
-      // 暫停相機
-      await controller?.pauseCamera();
-      
       // 嘗試解析QR碼數據 (假設是名片ID)
       final cardId = int.tryParse(qrData);
       if (cardId == null) {
@@ -64,6 +40,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       final cardProvider = Provider.of<CardProvider>(context, listen: false);
       final card = await cardProvider.getCardById(cardId);
       
+      if (card == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('找不到對應的名片')),
+        );
+        return;
+      }
+
       // 顯示名片資訊並詢問是否要添加到群組
       final shouldAddToGroup = await showDialog<bool>(
         context: context,
@@ -74,8 +57,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('姓名: ${card.name}'),
-              Text('公司: ${card.company}'),
-              Text('電話: ${card.phone}'),
+              if (card.company?.isNotEmpty == true)
+                Text('公司: ${card.company}'),
+              if (card.phone?.isNotEmpty == true)
+                Text('電話: ${card.phone}'),
               SizedBox(height: 16),
               Text('要將此名片添加到群組嗎？'),
             ],
@@ -102,8 +87,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       );
     } finally {
       setState(() => _isProcessing = false);
-      // 恢復相機
-      await controller?.resumeCamera();
     }
   }
 
@@ -118,7 +101,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       return;
     }
 
-    final selectedGroup = await showDialog<BusinessGroup>(
+    final selectedGroup = await showDialog<CardGroup>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('選擇群組'),
@@ -168,6 +151,41 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
   }
 
+  Future<void> _showManualInputDialog() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('手動輸入名片ID'),
+        content: TextField(
+          controller: _manualInputController,
+          decoration: InputDecoration(
+            labelText: '名片ID',
+            hintText: '請輸入名片ID',
+          ),
+          keyboardType: TextInputType.number,
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, _manualInputController.text);
+            },
+            child: Text('確定'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      await _processQRData(result);
+      _manualInputController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,10 +194,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.flash_on),
-            onPressed: () {
-              controller?.toggleFlash();
-            },
+            icon: Icon(Icons.keyboard),
+            onPressed: _showManualInputDialog,
+            tooltip: '手動輸入',
           ),
         ],
       ),
@@ -187,15 +204,40 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         children: [
           Expanded(
             flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-              overlay: QrScannerOverlayShape(
-                borderColor: Theme.of(context).primaryColor,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: 300,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              margin: EdgeInsets.all(16),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.qr_code_scanner,
+                      size: 100,
+                      color: Colors.white,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      '模擬QR碼掃描器',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '請使用右上角的手動輸入功能',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -216,11 +258,18 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     ),
                   SizedBox(height: 16),
                   Text(
-                    _isProcessing ? '處理中...' : '將QR碼對準掃描框',
+                    _isProcessing ? '處理中...' : '點擊右上角按鈕手動輸入名片ID',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: Icon(Icons.keyboard),
+                    label: Text('手動輸入名片ID'),
+                    onPressed: _showManualInputDialog,
                   ),
                 ],
               ),

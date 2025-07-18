@@ -1,4 +1,3 @@
-// lib/screens/cards/card_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/card_provider.dart';
@@ -36,7 +35,7 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-              ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('載入名片失敗: ${e.toString()}')),
       );
     }
@@ -202,7 +201,6 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                                 icon: Icon(Icons.share),
                                 label: Text('分享'),
                                 onPressed: () {
-                                  // TODO: 實作分享功能
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text('分享功能開發中')),
                                   );
@@ -236,7 +234,10 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                             _buildInfoRow('狀態', card!.isPublic ? '公開' : '私人'),
                             
                             // 社群媒體
-                            if (card!.facebook || card!.instagram || card!.line || card!.threads) ...[
+                            if ((card!.facebook == true) || 
+                                (card!.instagram == true) || 
+                                (card!.line == true) || 
+                                (card!.threads == true)) ...[
                               SizedBox(height: 16),
                               Text(
                                 '社群媒體',
@@ -248,13 +249,13 @@ class _CardDetailScreenState extends State<CardDetailScreen> {
                               SizedBox(height: 8),
                               Row(
                                 children: [
-                                  if (card!.facebook) 
+                                  if (card!.facebook == true) 
                                     _buildSocialIcon(Icons.facebook, 'Facebook'),
-                                  if (card!.instagram) 
+                                  if (card!.instagram == true) 
                                     _buildSocialIcon(Icons.camera_alt, 'Instagram'),
-                                  if (card!.line) 
+                                  if (card!.line == true) 
                                     _buildSocialIcon(Icons.chat, 'Line'),
-                                  if (card!.threads) 
+                                  if (card!.threads == true) 
                                     _buildSocialIcon(Icons.alternate_email, 'Threads'),
                                 ],
                               ),

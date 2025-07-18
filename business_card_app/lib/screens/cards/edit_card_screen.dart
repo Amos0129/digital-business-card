@@ -110,42 +110,37 @@ class _EditCardScreenState extends State<EditCardScreen> {
     try {
       final cardProvider = Provider.of<CardProvider>(context, listen: false);
       
-      final cardData = CardRequest(
-        name: _nameController.text,
-        company: _companyController.text.isEmpty ? null : _companyController.text,
-        position: _positionController.text.isEmpty ? null : _positionController.text,
-        phone: _phoneController.text.isEmpty ? null : _phoneController.text,
-        email: _emailController.text.isEmpty ? null : _emailController.text,
-        address: _addressController.text.isEmpty ? null : _addressController.text,
-        style: _selectedStyle,
-        isPublic: _isPublic,
-        facebook: _facebook,
-        instagram: _instagram,
-        line: _line,
-        threads: _threads,
-        facebookUrl: _facebookUrlController.text.isEmpty ? null : _facebookUrlController.text,
-        instagramUrl: _instagramUrlController.text.isEmpty ? null : _instagramUrlController.text,
-        lineUrl: _lineUrlController.text.isEmpty ? null : _lineUrlController.text,
-        threadsUrl: _threadsUrlController.text.isEmpty ? null : _threadsUrlController.text,
-      );
+      final cardData = {
+        'name': _nameController.text,
+        'company': _companyController.text.isEmpty ? null : _companyController.text,
+        'position': _positionController.text.isEmpty ? null : _positionController.text,
+        'phone': _phoneController.text.isEmpty ? null : _phoneController.text,
+        'email': _emailController.text.isEmpty ? null : _emailController.text,
+        'address': _addressController.text.isEmpty ? null : _addressController.text,
+        'style': _selectedStyle,
+        'isPublic': _isPublic,
+        'facebook': _facebook,
+        'instagram': _instagram,
+        'line': _line,
+        'threads': _threads,
+        'facebookUrl': _facebookUrlController.text.isEmpty ? null : _facebookUrlController.text,
+        'instagramUrl': _instagramUrlController.text.isEmpty ? null : _instagramUrlController.text,
+        'lineUrl': _lineUrlController.text.isEmpty ? null : _lineUrlController.text,
+        'threadsUrl': _threadsUrlController.text.isEmpty ? null : _threadsUrlController.text,
+      };
 
-      bool success;
+      BusinessCard savedCard;
       if (widget.card == null) {
         // 建立新名片
-        success = await cardProvider.createCard(cardData);
+        savedCard = await cardProvider.createCard(cardData);
       } else {
         // 更新現有名片
-        success = await cardProvider.updateCard(widget.card!.id, cardData);
-      }
-
-      if (!success) {
-        throw Exception(widget.card == null ? '建立名片失敗' : '更新名片失敗');
+        savedCard = await cardProvider.updateCard(widget.card!.id, cardData);
       }
 
       // 如果有選擇頭像，上傳頭像
       if (_avatarFile != null) {
-        final cardId = widget.card?.id ?? cardProvider.myCards.last.id;
-        await cardProvider.uploadAvatar(cardId, _avatarFile!);
+        await cardProvider.uploadAvatar(savedCard.id, _avatarFile!);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(

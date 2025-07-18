@@ -1,4 +1,3 @@
-// lib/screens/groups/groups_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/group_provider.dart';
@@ -65,7 +64,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
     }
   }
 
-  Future<void> _renameGroup(BusinessGroup group) async {
+  Future<void> _renameGroup(CardGroup group) async {
     final nameController = TextEditingController(text: group.name);
     
     final newName = await showDialog<String>(
@@ -106,7 +105,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
     }
   }
 
-  Future<void> _deleteGroup(BusinessGroup group) async {
+  Future<void> _deleteGroup(CardGroup group) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
