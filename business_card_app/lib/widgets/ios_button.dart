@@ -260,7 +260,7 @@ class _IOSButtonState extends State<IOSButton> {
 
       case IOSButtonType.plain:
         return _ButtonConfig(
-          backgroundColor: CupertinoColors.clear,
+          backgroundColor: const Color(0x00000000), // 修正：使用透明色替代 CupertinoColors.clear
           pressedColor: AppTheme.separatorColor.withOpacity(0.3),
           textColor: widget.customColor ?? AppTheme.primaryColor,
           borderColor: null,

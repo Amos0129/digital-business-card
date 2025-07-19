@@ -24,7 +24,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   _loadGroups() async {
     setState(() => _loading = true);
     try {
-      final response = await API.get('/group/by-user');
+      final response = await ApiClient.get('/group/by-user', needAuth: true);
       final groups = (response as List)
           .map((json) => Group.fromJson(json))
           .toList();
@@ -66,13 +66,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(
               CupertinoIcons.folder,
               size: 40,
-              color: AppTheme.primary.withOpacity(0.6),
+              color: AppTheme.primaryColor.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 24),
@@ -81,7 +81,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+              color: AppTheme.textColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -89,7 +89,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             '建立群組來整理您的名片',
             style: TextStyle(
               fontSize: 16,
-              color: AppTheme.textSecondary,
+              color: AppTheme.secondaryTextColor,
             ),
           ),
           const SizedBox(height: 32),
@@ -103,16 +103,27 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   Widget _buildGroupsList() {
-    return RefreshIndicator(
-      onRefresh: () async => _loadGroups(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _groups.length,
-        itemBuilder: (context, index) {
-          final group = _groups[index];
-          return _buildGroupItem(group);
-        },
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(
+        parent: AlwaysScrollableScrollPhysics(),
       ),
+      slivers: [
+        CupertinoSliverRefreshControl(
+          onRefresh: () async => _loadGroups(),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              final group = _groups[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                child: _buildGroupItem(group),
+              );
+            },
+            childCount: _groups.length,
+          ),
+        ),
+      ],
     );
   }
 
@@ -120,9 +131,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.cardRadius,
-        boxShadow: AppTheme.cardShadow,
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(IOSConstants.radiusLarge),
+        boxShadow: AppTheme.iosCardShadow,
       ),
       child: CupertinoButton(
         padding: const EdgeInsets.all(16),
@@ -133,12 +144,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primaryColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 CupertinoIcons.folder_fill,
-                color: AppTheme.primary,
+                color: AppTheme.primaryColor,
                 size: 24,
               ),
             ),
@@ -154,7 +165,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                      color: AppTheme.textColor,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -162,7 +173,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     '建立於 ${_formatDate(group.createdAt)}',
                     style: const TextStyle(
                       fontSize: 13,
-                      color: AppTheme.textSecondary,
+                      color: AppTheme.secondaryTextColor,
                     ),
                   ),
                 ],
@@ -172,7 +183,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             const Icon(
               CupertinoIcons.chevron_right,
               size: 16,
-              color: AppTheme.textTertiary,
+              color: AppTheme.tertiaryTextColor,
             ),
           ],
         ),
@@ -313,7 +324,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _createGroup(String name) async {
     try {
-      await API.post('/group/create', {'name': name});
+      await ApiClient.post('/group/create', {'name': name}, needAuth: true);
       _loadGroups();
     } catch (e) {
       _showError(e.toString());
@@ -322,7 +333,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _renameGroup(Group group, String newName) async {
     try {
-      await API.put('/group/rename/${group.id}', {'name': newName});
+      await ApiClient.put('/group/rename/${group.id}', {'name': newName}, needAuth: true);
       _loadGroups();
     } catch (e) {
       _showError(e.toString());
@@ -331,7 +342,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   void _deleteGroup(Group group) async {
     try {
-      await API.delete('/group/${group.id}');
+      await ApiClient.delete('/group/${group.id}', needAuth: true);
       _loadGroups();
     } catch (e) {
       _showError(e.toString());

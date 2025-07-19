@@ -43,11 +43,11 @@ class MainScreen extends StatelessWidget {
         switch (index) {
           case 0:
             return CupertinoTabView(
-              builder: (context) => const MyCardsScreen(),
+              builder: (context) => MyCardsScreen(),
             );
           case 1:
             return CupertinoTabView(
-              builder: (context) => const PublicCardsScreen(),
+              builder: (context) => PublicCardsScreen(),
             );
           case 2:
             return CupertinoTabView(

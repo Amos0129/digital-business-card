@@ -529,7 +529,7 @@ class _QRScannerScreenState extends State<QRScannerScreen>
       _flashOn = !_flashOn;
     });
     
-    // 模擬手電筒切換
+    // 修正：使用正確的 HapticFeedback 方法
     HapticFeedback.lightImpact();
   }
 
@@ -673,8 +673,8 @@ class _QRScannerScreenState extends State<QRScannerScreen>
   }
 
   void _simulateQRDetection(String data) {
-    // 模擬QR碼掃描成功
-    HapticFeedback.notificationFeedback(NotificationFeedbackType.success);
+    // 修正：使用正確的 HapticFeedback 方法
+    HapticFeedback.heavyImpact();
     
     setState(() {
       _isScanning = false;

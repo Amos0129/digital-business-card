@@ -62,7 +62,7 @@ public class SecurityConfig {
 
             corsConfig.setAllowedOrigins(List.of(
                     "http://localhost:3000",
-                    "http://localhost:7374"
+                    "http://localhost:12912"
             ));
             corsConfig.addAllowedMethod("*");
             corsConfig.addAllowedHeader("*");

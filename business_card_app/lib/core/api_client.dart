@@ -186,6 +186,33 @@ class ApiClient {
       throw ApiException(AppConstants.errorUnknown, 0);
     }
   }
+  
+  // 新增 putWithParams 方法
+  static Future<dynamic> putWithParams(String endpoint, Map<String, dynamic> params, {bool needAuth = false}) async {
+    final uri = Uri.parse('${AppConstants.baseUrl}$endpoint').replace(
+      queryParameters: params.map((key, value) => MapEntry(key, value.toString())),
+    );
+    
+    try {
+      final headers = await _getHeaders(needAuth: needAuth);
+      print('PUT with params: $uri'); // 調試用
+      
+      final response = await http.put(
+        uri, 
+        headers: headers,
+        body: json.encode({}), // 空的 body
+      ).timeout(_timeout);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } on http.ClientException {
+      throw ApiException(AppConstants.errorNetwork, 0);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(AppConstants.errorUnknown, 0);
+    }
+  }
 }
 
 // 自定義 API 異常類

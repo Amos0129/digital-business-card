@@ -3,23 +3,74 @@ import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme.dart';
 import '../../models/card.dart';
+import '../../services/card_service.dart';
 
-class CardDetailScreen extends StatelessWidget {
-  final BusinessCard card;
+class CardDetailScreen extends StatefulWidget {
+  final int cardId;
   final bool isPublic;
 
   const CardDetailScreen({
     super.key,
-    required this.card,
+    required this.cardId,
     this.isPublic = false,
   });
 
   @override
+  State<CardDetailScreen> createState() => _CardDetailScreenState();
+}
+
+class _CardDetailScreenState extends State<CardDetailScreen> {
+  BusinessCard? card;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCard();
+  }
+
+  Future<void> _loadCard() async {
+    try {
+      final loadedCard = await CardService.getCardDetail(widget.cardId);
+      setState(() {
+        card = loadedCard;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return CupertinoPageScaffold(
+        navigationBar: const CupertinoNavigationBar(
+          middle: Text('名片詳情'),
+        ),
+        child: const Center(child: CupertinoActivityIndicator()),
+      );
+    }
+
+    if (errorMessage != null || card == null) {
+      return CupertinoPageScaffold(
+        navigationBar: const CupertinoNavigationBar(
+          middle: Text('名片詳情'),
+        ),
+        child: Center(
+          child: Text(errorMessage ?? '載入失敗'),
+        ),
+      );
+    }
+
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('名片詳情'),
-        trailing: !isPublic
+        trailing: !widget.isPublic
             ? CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: () => _showShareOptions(context),
@@ -65,11 +116,11 @@ class CardDetailScreen extends StatelessWidget {
               color: AppTheme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: card.avatarUrl != null
+            child: card!.avatarUrl != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: Image.network(
-                      card.avatarUrl!,
+                      card!.avatarUrl!,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
                     ),
@@ -81,15 +132,15 @@ class CardDetailScreen extends StatelessWidget {
           
           // 姓名
           Text(
-            card.name,
+            card!.name,
             style: AppTheme.largeTitle.copyWith(fontSize: 24),
           ),
           
           // 公司職位
-          if (card.company != null || card.position != null) ...[
+          if (card!.company != null || card!.position != null) ...[
             const SizedBox(height: 8),
             Text(
-              [card.position, card.company]
+              [card!.position, card!.company]
                   .where((e) => e != null && e.isNotEmpty)
                   .join(' • '),
               style: AppTheme.subheadline.copyWith(
@@ -114,30 +165,30 @@ class CardDetailScreen extends StatelessWidget {
   Widget _buildInfoSection() {
     final items = <Widget>[];
     
-    if (card.email != null && card.email!.isNotEmpty) {
+    if (card!.email != null && card!.email!.isNotEmpty) {
       items.add(_buildInfoItem(
         icon: CupertinoIcons.mail,
         title: '電子郵件',
-        value: card.email!,
-        onTap: () => _launchEmail(card.email!),
+        value: card!.email!,
+        onTap: () => _launchEmail(card!.email!),
       ));
     }
     
-    if (card.phone != null && card.phone!.isNotEmpty) {
+    if (card!.phone != null && card!.phone!.isNotEmpty) {
       items.add(_buildInfoItem(
         icon: CupertinoIcons.phone,
         title: '電話',
-        value: card.phone!,
-        onTap: () => _launchPhone(card.phone!),
+        value: card!.phone!,
+        onTap: () => _launchPhone(card!.phone!),
       ));
     }
     
-    if (card.address != null && card.address!.isNotEmpty) {
+    if (card!.address != null && card!.address!.isNotEmpty) {
       items.add(_buildInfoItem(
         icon: CupertinoIcons.location,
         title: '地址',
-        value: card.address!,
-        onTap: () => _launchMaps(card.address!),
+        value: card!.address!,
+        onTap: () => _launchMaps(card!.address!),
       ));
     }
 
@@ -198,39 +249,39 @@ class CardDetailScreen extends StatelessWidget {
   Widget _buildSocialSection() {
     final socials = <Map<String, dynamic>>[];
     
-    if (card.facebook == true && card.facebookUrl != null) {
+    if (card!.facebook == true && card!.facebookUrl != null) {
       socials.add({
         'name': 'Facebook',
         'icon': CupertinoIcons.globe,
         'color': CupertinoColors.systemBlue,
-        'url': card.facebookUrl,
+        'url': card!.facebookUrl,
       });
     }
     
-    if (card.instagram == true && card.instagramUrl != null) {
+    if (card!.instagram == true && card!.instagramUrl != null) {
       socials.add({
         'name': 'Instagram',
         'icon': CupertinoIcons.camera,
         'color': CupertinoColors.systemPink,
-        'url': card.instagramUrl,
+        'url': card!.instagramUrl,
       });
     }
     
-    if (card.line == true && card.lineUrl != null) {
+    if (card!.line == true && card!.lineUrl != null) {
       socials.add({
         'name': 'LINE',
         'icon': CupertinoIcons.chat_bubble,
         'color': CupertinoColors.systemGreen,
-        'url': card.lineUrl,
+        'url': card!.lineUrl,
       });
     }
     
-    if (card.threads == true && card.threadsUrl != null) {
+    if (card!.threads == true && card!.threadsUrl != null) {
       socials.add({
         'name': 'Threads',
         'icon': CupertinoIcons.link,
         'color': CupertinoColors.systemIndigo,
-        'url': card.threadsUrl,
+        'url': card!.threadsUrl,
       });
     }
 
@@ -298,7 +349,7 @@ class CardDetailScreen extends StatelessWidget {
             child: const Text('加入聯絡人'),
           ),
         ),
-        if (!isPublic) ...[
+        if (!widget.isPublic) ...[
           const SizedBox(width: 12),
           Expanded(
             child: CupertinoButton(

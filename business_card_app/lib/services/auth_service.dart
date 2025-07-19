@@ -3,6 +3,89 @@ import '../models/user.dart';
 import '../core/api_client.dart';
 import '../core/constants.dart';
 
+// 登入請求模型
+class LoginRequest {
+  final String email;
+  final String password;
+
+  LoginRequest({
+    required this.email,
+    required this.password,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'password': password,
+    };
+  }
+}
+
+// 登入回應模型
+class LoginResponse {
+  final User user;
+  final String token;
+
+  LoginResponse({
+    required this.user,
+    required this.token,
+  });
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    return LoginResponse(
+      user: User.fromJson(json['user'] ?? json),
+      token: json['token'] ?? json['accessToken'] ?? '',
+    );
+  }
+}
+
+// 註冊請求模型
+class RegisterRequest {
+  final String email;
+  final String password;
+
+  RegisterRequest({
+    required this.email,
+    required this.password,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'password': password,
+    };
+  }
+}
+
+// 忘記密碼請求模型
+class ForgotPasswordRequest {
+  final String email;
+
+  ForgotPasswordRequest({required this.email});
+
+  Map<String, dynamic> toJson() {
+    return {'email': email};
+  }
+}
+
+// 重設密碼請求模型
+class ResetPasswordRequest {
+  final String token;
+  final String newPassword;
+
+  ResetPasswordRequest({
+    required this.token,
+    required this.newPassword,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'token': token,
+      'newPassword': newPassword,
+    };
+  }
+}
+
 class AuthService {
   // 登入
   Future<LoginResponse> login(String email, String password) async {

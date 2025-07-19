@@ -134,15 +134,15 @@ class _CardFormScreenState extends State<CardFormScreen> {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppTheme.textPrimary,
+              color: AppTheme.textColor,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: AppTheme.cardRadius,
-            boxShadow: AppTheme.cardShadow,
+            color: AppTheme.cardColor,
+            borderRadius: BorderRadius.circular(IOSConstants.radiusLarge),
+            boxShadow: AppTheme.iosCardShadow,
           ),
           child: Column(children: children),
         ),
@@ -156,7 +156,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppTheme.textTertiary, width: 0.5),
+          bottom: BorderSide(color: AppTheme.separatorColor, width: 0.5),
         ),
       ),
       child: Column(
@@ -166,7 +166,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
             label,
             style: const TextStyle(
               fontSize: 13,
-              color: AppTheme.textSecondary,
+              color: AppTheme.secondaryTextColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -191,7 +191,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppTheme.textTertiary, width: 0.5),
+          bottom: BorderSide(color: AppTheme.separatorColor, width: 0.5),
         ),
       ),
       child: Column(
@@ -203,7 +203,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   label,
                   style: const TextStyle(
                     fontSize: 16,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textColor,
                   ),
                 ),
               ),
@@ -244,7 +244,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   title,
                   style: const TextStyle(
                     fontSize: 16,
-                    color: AppTheme.textPrimary,
+                    color: AppTheme.textColor,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -252,7 +252,7 @@ class _CardFormScreenState extends State<CardFormScreen> {
                   subtitle,
                   style: const TextStyle(
                     fontSize: 13,
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.secondaryTextColor,
                   ),
                 ),
               ],
