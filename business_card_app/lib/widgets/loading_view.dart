@@ -4,13 +4,13 @@ import '../core/theme.dart';
 
 class LoadingView extends StatelessWidget {
   final String? message;
-  final bool overlay;
+  final bool isOverlay;
   final Color? backgroundColor;
 
   const LoadingView({
     super.key,
     this.message,
-    this.overlay = false,
+    this.isOverlay = false,
     this.backgroundColor,
   });
 
@@ -18,7 +18,7 @@ class LoadingView extends StatelessWidget {
   static Widget fullScreen({String? message}) {
     return LoadingView(
       message: message,
-      overlay: true,
+      isOverlay: true,
       backgroundColor: AppTheme.backgroundColor,
     );
   }
@@ -32,10 +32,10 @@ class LoadingView extends StatelessWidget {
   }
 
   // 透明覆蓋
-  static Widget overlay({String? message}) {
+  static Widget overlayWidget({String? message}) {
     return LoadingView(
       message: message,
-      overlay: true,
+      isOverlay: true,
       backgroundColor: CupertinoColors.black.withOpacity(0.3),
     );
   }
@@ -63,7 +63,7 @@ class LoadingView extends StatelessWidget {
       ],
     );
 
-    if (overlay) {
+    if (isOverlay) {
       return Container(
         width: double.infinity,
         height: double.infinity,

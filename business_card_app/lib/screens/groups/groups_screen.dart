@@ -1,7 +1,7 @@
 // lib/screens/groups/groups_screen.dart
 import 'package:flutter/cupertino.dart';
 import '../../core/theme.dart';
-import '../../core/api.dart';
+import '../../core/api_client.dart';
 import '../../models/user.dart';
 
 class GroupsScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
 // lib/services/card_service.dart
-import '../core/api.dart';
+import '../core/api_client.dart';
 import '../models/card.dart';
 
 class CardService {

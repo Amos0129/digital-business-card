@@ -1,7 +1,7 @@
 // lib/providers/group_provider.dart
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
-import '../core/api.dart';
+import '../core/api_client.dart';
 import '../core/constants.dart';
 
 class GroupProvider with ChangeNotifier {

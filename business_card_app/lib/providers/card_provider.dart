@@ -1,7 +1,7 @@
 // lib/providers/card_provider.dart
 import 'package:flutter/foundation.dart';
 import '../models/card.dart';
-import '../core/api.dart';
+import '../core/api_client.dart';
 import '../core/constants.dart';
 
 class CardProvider with ChangeNotifier {
