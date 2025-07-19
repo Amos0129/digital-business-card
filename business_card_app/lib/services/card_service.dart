@@ -1,138 +1,81 @@
 // lib/services/card_service.dart
-import 'dart:io';
+import '../core/api.dart';
 import '../models/card.dart';
-import '../models/api_response.dart';
-import '../core/api_client.dart';
-import '../core/constants.dart';
 
 class CardService {
-  // 取得我的名片
-  Future<List<BusinessCard>> getMyCards() async {
-    final response = await ApiClient.get(ApiEndpoints.myCards, needAuth: true);
-    
-    if (response is List) {
-      return response.map((item) => BusinessCard.fromJson(item)).toList();
+  // 獲取我的名片
+  static Future<List<BusinessCard>> getMyCards() async {
+    try {
+      final response = await API.get('/cards/my');
+      return (response as List)
+          .map((json) => BusinessCard.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw '獲取名片失敗: $e';
     }
-    return [];
   }
 
-  // 搜尋公開名片
-  Future<List<BusinessCard>> searchPublicCards(String query) async {
-    final params = {'query': query};
-    final response = await ApiClient.getWithParams(
-      ApiEndpoints.searchPublicCards, 
-      params,
-    );
-    
-    if (response is List) {
-      return response.map((item) => BusinessCard.fromJson(item)).toList();
+  // 獲取公開名片
+  static Future<List<BusinessCard>> getPublicCards({String? query}) async {
+    try {
+      final endpoint = query != null && query.isNotEmpty
+          ? '/cards/public/search?query=$query'
+          : '/cards/public/search';
+      
+      final response = await API.get(endpoint);
+      return (response as List)
+          .map((json) => BusinessCard.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw '獲取公開名片失敗: $e';
     }
-    return [];
   }
 
-  // 取得單一名片
-  Future<BusinessCard> getCardById(int cardId) async {
-    final response = await ApiClient.get(
-      ApiEndpoints.cardById(cardId), 
-      needAuth: true,
-    );
-    return BusinessCard.fromJson(response);
-  }
-
-  // 建立名片
-  Future<BusinessCard> createCard(CardRequest cardRequest) async {
-    final response = await ApiClient.post(
-      ApiEndpoints.createCard, 
-      cardRequest.toJson(), 
-      needAuth: true,
-    );
-    return BusinessCard.fromJson(response);
+  // 創建名片
+  static Future<BusinessCard> createCard(BusinessCard card) async {
+    try {
+      final response = await API.post('/cards/my', card.toJson());
+      return BusinessCard.fromJson(response);
+    } catch (e) {
+      throw '創建名片失敗: $e';
+    }
   }
 
   // 更新名片
-  Future<BusinessCard> updateCard(int cardId, CardRequest cardRequest) async {
-    final response = await ApiClient.put(
-      ApiEndpoints.updateCard(cardId), 
-      cardRequest.toJson(), 
-      needAuth: true,
-    );
-    return BusinessCard.fromJson(response);
+  static Future<BusinessCard> updateCard(int cardId, BusinessCard card) async {
+    try {
+      final response = await API.put('/cards/$cardId', card.toJson());
+      return BusinessCard.fromJson(response);
+    } catch (e) {
+      throw '更新名片失敗: $e';
+    }
   }
 
   // 刪除名片
-  Future<void> deleteCard(int cardId) async {
-    await ApiClient.delete(
-      ApiEndpoints.deleteCard(cardId), 
-      needAuth: true,
-    );
+  static Future<void> deleteCard(int cardId) async {
+    try {
+      await API.delete('/cards/$cardId');
+    } catch (e) {
+      throw '刪除名片失敗: $e';
+    }
   }
 
-  // 上傳頭像
-  Future<String> uploadAvatar(int cardId, File imageFile) async {
-    final response = await ApiClient.uploadFile(
-      ApiEndpoints.uploadAvatar(cardId), 
-      imageFile, 
-      needAuth: true,
-    );
-    
-    final uploadResult = UploadResult.fromJson(response);
-    return uploadResult.url;
-  }
-
-  // 清除頭像
-  Future<void> clearAvatar(int cardId) async {
-    await ApiClient.delete(
-      ApiEndpoints.clearAvatar(cardId), 
-      needAuth: true,
-    );
+  // 獲取單張名片詳情
+  static Future<BusinessCard> getCardDetail(int cardId) async {
+    try {
+      final response = await API.get('/cards/$cardId');
+      return BusinessCard.fromJson(response);
+    } catch (e) {
+      throw '獲取名片詳情失敗: $e';
+    }
   }
 
   // 更新公開狀態
-  Future<void> updatePublicStatus(int cardId, bool isPublic) async {
-    final data = {'isPublic': isPublic};
-    await ApiClient.put(
-      ApiEndpoints.updateCardPublic(cardId), 
-      data, 
-      needAuth: true,
-    );
-  }
-
-  // 根據群組取得名片
-  Future<List<BusinessCard>> getCardsByGroup(int groupId) async {
-    final response = await ApiClient.get(
-      ApiEndpoints.cardsByGroup(groupId), 
-      needAuth: true,
-    );
-    
-    if (response is List) {
-      return response.map((item) => BusinessCard.fromJson(item)).toList();
+  static Future<void> updatePublicStatus(int cardId, bool isPublic) async {
+    try {
+      await API.put('/cards/$cardId/public?value=$isPublic', {});
+    } catch (e) {
+      throw '更新公開狀態失敗: $e';
     }
-    return [];
-  }
-
-  // 將名片加入群組
-  Future<void> addCardToGroup(int cardId, int groupId) async {
-    final data = {
-      'cardId': cardId,
-      'groupId': groupId,
-    };
-    await ApiClient.post(
-      ApiEndpoints.addCardToGroup, 
-      data, 
-      needAuth: true,
-    );
-  }
-
-  // 將名片從群組移除
-  Future<void> removeCardFromGroup(int cardId, int groupId) async {
-    final data = {
-      'cardId': cardId,
-      'groupId': groupId,
-    };
-    await ApiClient.post(
-      ApiEndpoints.removeCardFromGroup, 
-      data, 
-      needAuth: true,
-    );
   }
 }

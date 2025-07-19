@@ -1,263 +1,355 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/group_provider.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_text_field.dart';
-import '../../models/group.dart';
-import '../../core/constants.dart';
+// lib/screens/groups/groups_screen.dart
+import 'package:flutter/cupertino.dart';
+import '../../core/theme.dart';
+import '../../core/api.dart';
+import '../../models/user.dart';
 
 class GroupsScreen extends StatefulWidget {
+  const GroupsScreen({super.key});
+
   @override
-  _GroupsScreenState createState() => _GroupsScreenState();
+  State<GroupsScreen> createState() => _GroupsScreenState();
 }
 
 class _GroupsScreenState extends State<GroupsScreen> {
+  List<Group> _groups = [];
+  bool _loading = true;
+
   @override
   void initState() {
     super.initState();
     _loadGroups();
   }
 
-  Future<void> _loadGroups() async {
-    final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-    await groupProvider.loadGroups();
-  }
-
-  Future<void> _createGroup() async {
-    final nameController = TextEditingController();
-    
-    final groupName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('新增群組'),
-        content: AppTextField(
-          controller: nameController,
-          label: '群組名稱',
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, nameController.text),
-            child: Text('建立'),
-          ),
-        ],
-      ),
-    );
-
-    if (groupName != null && groupName.isNotEmpty) {
-      try {
-        final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-        await groupProvider.createGroup(groupName);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('群組建立成功')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('建立失敗: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<void> _renameGroup(CardGroup group) async {
-    final nameController = TextEditingController(text: group.name);
-    
-    final newName = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('重新命名群組'),
-        content: AppTextField(
-          controller: nameController,
-          label: '群組名稱',
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, nameController.text),
-            child: Text('儲存'),
-          ),
-        ],
-      ),
-    );
-
-    if (newName != null && newName.isNotEmpty && newName != group.name) {
-      try {
-        final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-        await groupProvider.renameGroup(group.id, newName);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('群組重新命名成功')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('重新命名失敗: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteGroup(CardGroup group) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('刪除群組'),
-        content: Text('確定要刪除「${group.name}」群組嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('刪除'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final groupProvider = Provider.of<GroupProvider>(context, listen: false);
-        await groupProvider.deleteGroup(group.id);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('群組已刪除')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('刪除失敗: ${e.toString()}')),
-        );
-      }
+  _loadGroups() async {
+    setState(() => _loading = true);
+    try {
+      final response = await API.get('/group/by-user');
+      final groups = (response as List)
+          .map((json) => Group.fromJson(json))
+          .toList();
+      setState(() => _groups = groups);
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('群組管理'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _createGroup,
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('群組管理'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => _showCreateGroupDialog(),
+          child: const Icon(CupertinoIcons.add),
+        ),
+      ),
+      child: SafeArea(
+        child: _loading
+            ? const Center(child: CupertinoActivityIndicator())
+            : _groups.isEmpty
+                ? _buildEmptyState()
+                : _buildGroupsList(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              CupertinoIcons.folder,
+              size: 40,
+              color: AppTheme.primary.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            '還沒有群組',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '建立群組來整理您的名片',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 32),
+          CupertinoButton.filled(
+            onPressed: () => _showCreateGroupDialog(),
+            child: const Text('建立群組'),
           ),
         ],
       ),
-      body: Consumer<GroupProvider>(
-        builder: (context, groupProvider, child) {
-          if (groupProvider.isLoading) {
-            return Center(child: CircularProgressIndicator());
-          }
+    );
+  }
 
-          if (groupProvider.groups.isEmpty) {
-            return Center(
+  Widget _buildGroupsList() {
+    return RefreshIndicator(
+      onRefresh: () async => _loadGroups(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _groups.length,
+        itemBuilder: (context, index) {
+          final group = _groups[index];
+          return _buildGroupItem(group);
+        },
+      ),
+    );
+  }
+
+  Widget _buildGroupItem(Group group) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.cardRadius,
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: CupertinoButton(
+        padding: const EdgeInsets.all(16),
+        onPressed: () => _showGroupOptions(group),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                CupertinoIcons.folder_fill,
+                color: AppTheme.primary,
+                size: 24,
+              ),
+            ),
+            
+            const SizedBox(width: 16),
+            
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.folder_outlined,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
                   Text(
-                    '還沒有群組',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
+                    group.name,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _createGroup,
-                    child: Text('建立第一個群組'),
+                  const SizedBox(height: 4),
+                  Text(
+                    '建立於 ${_formatDate(group.createdAt)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: _loadGroups,
-            child: ListView.builder(
-              padding: EdgeInsets.all(16),
-              itemCount: groupProvider.groups.length,
-              itemBuilder: (context, index) {
-                final group = groupProvider.groups[index];
-                return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      child: Icon(
-                        Icons.folder,
-                        color: Colors.white,
-                      ),
-                    ),
-                    title: Text(
-                      group.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: Text('點擊查看群組內容'),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'rename':
-                            _renameGroup(group);
-                            break;
-                          case 'delete':
-                            _deleteGroup(group);
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'rename',
-                          child: Row(
-                            children: [
-                              Icon(Icons.edit),
-                              SizedBox(width: 8),
-                              Text('重新命名'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('刪除', style: TextStyle(color: Colors.red)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.groupDetail,
-                        arguments: group.id,
-                      );
-                    },
-                  ),
-                );
-              },
             ),
-          );
-        },
+            
+            const Icon(
+              CupertinoIcons.chevron_right,
+              size: 16,
+              color: AppTheme.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}';
+  }
+
+  void _showCreateGroupDialog() {
+    final controller = TextEditingController();
+    
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('建立群組'),
+        content: Column(
+          children: [
+            const SizedBox(height: 16),
+            CupertinoTextField(
+              controller: controller,
+              placeholder: '請輸入群組名稱',
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.pop(context);
+                _createGroup(controller.text.trim());
+              }
+            },
+            child: const Text('建立'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGroupOptions(Group group) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text(group.name),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showRenameDialog(group);
+            },
+            child: const Text('重新命名'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _showDeleteDialog(group);
+            },
+            isDestructiveAction: true,
+            child: const Text('刪除群組'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('取消'),
+        ),
+      ),
+    );
+  }
+
+  void _showRenameDialog(Group group) {
+    final controller = TextEditingController(text: group.name);
+    
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('重新命名群組'),
+        content: Column(
+          children: [
+            const SizedBox(height: 16),
+            CupertinoTextField(
+              controller: controller,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty && controller.text.trim() != group.name) {
+                Navigator.pop(context);
+                _renameGroup(group, controller.text.trim());
+              } else {
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('確定'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(Group group) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('刪除群組'),
+        content: Text('確定要刪除「${group.name}」群組嗎？\n群組內的名片不會被刪除。'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteGroup(group);
+            },
+            child: const Text('刪除'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _createGroup(String name) async {
+    try {
+      await API.post('/group/create', {'name': name});
+      _loadGroups();
+    } catch (e) {
+      _showError(e.toString());
+    }
+  }
+
+  void _renameGroup(Group group, String newName) async {
+    try {
+      await API.put('/group/rename/${group.id}', {'name': newName});
+      _loadGroups();
+    } catch (e) {
+      _showError(e.toString());
+    }
+  }
+
+  void _deleteGroup(Group group) async {
+    try {
+      await API.delete('/group/${group.id}');
+      _loadGroups();
+    } catch (e) {
+      _showError(e.toString());
+    }
+  }
+
+  void _showError(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: const Text('錯誤'),
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('確定'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
     );
   }

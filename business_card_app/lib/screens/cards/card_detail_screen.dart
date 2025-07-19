@@ -1,313 +1,372 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../providers/card_provider.dart';
-import '../../widgets/card/card_preview.dart';
-import '../../widgets/card/qr_code_widget.dart';
+// lib/screens/cards/card_detail_screen.dart
+import 'package:flutter/cupertino.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../core/theme.dart';
 import '../../models/card.dart';
-import '../../core/constants.dart';
 
-class CardDetailScreen extends StatefulWidget {
-  final int cardId;
-  
-  CardDetailScreen({required this.cardId});
+class CardDetailScreen extends StatelessWidget {
+  final BusinessCard card;
+  final bool isPublic;
 
-  @override
-  _CardDetailScreenState createState() => _CardDetailScreenState();
-}
-
-class _CardDetailScreenState extends State<CardDetailScreen> {
-  BusinessCard? card;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCard();
-  }
-
-  Future<void> _loadCard() async {
-    try {
-      final cardProvider = Provider.of<CardProvider>(context, listen: false);
-      final loadedCard = await cardProvider.getCardById(widget.cardId);
-      setState(() {
-        card = loadedCard;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('載入名片失敗: ${e.toString()}')),
-      );
-    }
-  }
-
-  Future<void> _deleteCard() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('刪除名片'),
-        content: Text('確定要刪除這張名片嗎？'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('取消'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('刪除'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final cardProvider = Provider.of<CardProvider>(context, listen: false);
-        await cardProvider.deleteCard(widget.cardId);
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('名片已刪除')),
-        );
-        Navigator.pop(context);
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('刪除失敗: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<void> _togglePublic() async {
-    if (card == null) return;
-    
-    try {
-      final cardProvider = Provider.of<CardProvider>(context, listen: false);
-      await cardProvider.updatePublicStatus(card!.id, !card!.isPublic);
-      
-      setState(() {
-        card = card!.copyWith(isPublic: !card!.isPublic);
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(card!.isPublic ? '名片已設為公開' : '名片已設為私人'),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('更新失敗: ${e.toString()}')),
-      );
-    }
-  }
+  const CardDetailScreen({
+    super.key,
+    required this.card,
+    this.isPublic = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('名片詳情'),
-        elevation: 0,
-        actions: [
-          if (card != null) ...[
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.editCard,
-                  arguments: card,
-                );
-              },
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('名片詳情'),
+        trailing: !isPublic
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () => _showShareOptions(context),
+                child: const Icon(CupertinoIcons.share),
+              )
+            : null,
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildInfoSection(),
+              const SizedBox(height: 24),
+              _buildSocialSection(),
+              const SizedBox(height: 24),
+              _buildContactSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.cardRadius,
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          // 頭像
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
             ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                switch (value) {
-                  case 'public':
-                    _togglePublic();
-                    break;
-                  case 'delete':
-                    _deleteCard();
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'public',
-                  child: Row(
-                    children: [
-                      Icon(card!.isPublic ? Icons.visibility_off : Icons.visibility),
-                      SizedBox(width: 8),
-                      Text(card!.isPublic ? '設為私人' : '設為公開'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('刪除', style: TextStyle(color: Colors.red)),
-                    ],
-                  ),
-                ),
-              ],
+            child: card.avatarUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      card.avatarUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
+                    ),
+                  )
+                : _buildDefaultAvatar(),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // 姓名
+          Text(
+            card.name,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          
+          // 公司職位
+          if (card.company != null || card.position != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              [card.position, card.company]
+                  .where((e) => e != null && e.isNotEmpty)
+                  .join(' • '),
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ],
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : card == null
-              ? Center(child: Text('找不到名片'))
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // 名片預覽
-                      CardPreview(card: card!),
-                      
-                      // 功能按鈕
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: Icon(Icons.qr_code),
-                                label: Text('顯示QR碼'),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text('名片QR碼'),
-                                      content: Container(
-                                        width: 250,
-                                        height: 250,
-                                        child: QRCodeWidget(data: card!.id.toString()),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          child: Text('關閉'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                icon: Icon(Icons.share),
-                                label: Text('分享'),
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('分享功能開發中')),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      
-                      // 名片資訊
-                      Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '名片資訊',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            _buildInfoRow('姓名', card!.name),
-                            _buildInfoRow('公司', card!.company),
-                            _buildInfoRow('職位', card!.position),
-                            _buildInfoRow('電話', card!.phone),
-                            _buildInfoRow('信箱', card!.email),
-                            _buildInfoRow('地址', card!.address),
-                            _buildInfoRow('狀態', card!.isPublic ? '公開' : '私人'),
-                            
-                            // 社群媒體
-                            if ((card!.facebook == true) || 
-                                (card!.instagram == true) || 
-                                (card!.line == true) || 
-                                (card!.threads == true)) ...[
-                              SizedBox(height: 16),
-                              Text(
-                                '社群媒體',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  if (card!.facebook == true) 
-                                    _buildSocialIcon(Icons.facebook, 'Facebook'),
-                                  if (card!.instagram == true) 
-                                    _buildSocialIcon(Icons.camera_alt, 'Instagram'),
-                                  if (card!.line == true) 
-                                    _buildSocialIcon(Icons.chat, 'Line'),
-                                  if (card!.threads == true) 
-                                    _buildSocialIcon(Icons.alternate_email, 'Threads'),
-                                ],
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
     );
   }
 
-  Widget _buildInfoRow(String label, String? value) {
-    if (value == null || value.isEmpty) return SizedBox.shrink();
+  Widget _buildDefaultAvatar() {
+    return Icon(
+      CupertinoIcons.person_fill,
+      size: 50,
+      color: AppTheme.primary.withOpacity(0.6),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    final items = <Widget>[];
     
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+    if (card.email != null && card.email!.isNotEmpty) {
+      items.add(_buildInfoItem(
+        icon: CupertinoIcons.mail,
+        title: '電子郵件',
+        value: card.email!,
+        onTap: () => _launchEmail(card.email!),
+      ));
+    }
+    
+    if (card.phone != null && card.phone!.isNotEmpty) {
+      items.add(_buildInfoItem(
+        icon: CupertinoIcons.phone,
+        title: '電話',
+        value: card.phone!,
+        onTap: () => _launchPhone(card.phone!),
+      ));
+    }
+    
+    if (card.address != null && card.address!.isNotEmpty) {
+      items.add(_buildInfoItem(
+        icon: CupertinoIcons.location,
+        title: '地址',
+        value: card.address!,
+        onTap: () => _launchMaps(card.address!),
+      ));
+    }
+
+    if (items.isEmpty) return const SizedBox();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.cardRadius,
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(children: items),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    VoidCallback? onTap,
+  }) {
+    return CupertinoButton(
+      padding: const EdgeInsets.all(16),
+      onPressed: onTap,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 80,
+          Icon(icon, color: AppTheme.primary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onTap != null)
+            const Icon(
+              CupertinoIcons.chevron_right,
+              size: 16,
+              color: AppTheme.textTertiary,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialSection() {
+    final socials = <Map<String, dynamic>>[];
+    
+    if (card.facebook == true && card.facebookUrl != null) {
+      socials.add({
+        'name': 'Facebook',
+        'icon': CupertinoIcons.globe,
+        'color': CupertinoColors.systemBlue,
+        'url': card.facebookUrl,
+      });
+    }
+    
+    if (card.instagram == true && card.instagramUrl != null) {
+      socials.add({
+        'name': 'Instagram',
+        'icon': CupertinoIcons.camera,
+        'color': CupertinoColors.systemPink,
+        'url': card.instagramUrl,
+      });
+    }
+    
+    if (card.line == true && card.lineUrl != null) {
+      socials.add({
+        'name': 'LINE',
+        'icon': CupertinoIcons.chat_bubble,
+        'color': CupertinoColors.systemGreen,
+        'url': card.lineUrl,
+      });
+    }
+    
+    if (card.threads == true && card.threadsUrl != null) {
+      socials.add({
+        'name': 'Threads',
+        'icon': CupertinoIcons.link,
+        'color': CupertinoColors.systemIndigo,
+        'url': card.threadsUrl,
+      });
+    }
+
+    if (socials.isEmpty) return const SizedBox();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: AppTheme.cardRadius,
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: socials
+            .map((social) => _buildSocialItem(
+                  name: social['name'],
+                  icon: social['icon'],
+                  color: social['color'],
+                  url: social['url'],
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildSocialItem({
+    required String name,
+    required IconData icon,
+    required Color color,
+    required String url,
+  }) {
+    return CupertinoButton(
+      padding: const EdgeInsets.all(16),
+      onPressed: () => _launchUrl(url),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
             child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+              name,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppTheme.textPrimary,
               ),
             ),
           ),
-          Expanded(
-            child: Text(value),
+          const Icon(
+            CupertinoIcons.chevron_right,
+            size: 16,
+            color: AppTheme.textTertiary,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSocialIcon(IconData icon, String label) {
-    return Padding(
-      padding: EdgeInsets.only(right: 16),
-      child: Column(
-        children: [
-          Icon(icon, size: 24),
-          SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12),
+  Widget _buildContactSection() {
+    return Row(
+      children: [
+        Expanded(
+          child: CupertinoButton.filled(
+            onPressed: () => _addToContacts(),
+            child: const Text('加入聯絡人'),
+          ),
+        ),
+        if (!isPublic) ...[
+          const SizedBox(width: 12),
+          Expanded(
+            child: CupertinoButton(
+              color: CupertinoColors.systemGrey5,
+              onPressed: () => _generateQRCode(),
+              child: const Text(
+                '生成 QR Code',
+                style: TextStyle(color: AppTheme.textPrimary),
+              ),
+            ),
           ),
         ],
-      ),
+      ],
     );
+  }
+
+  void _launchEmail(String email) async {
+    final uri = Uri.parse('mailto:$email');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _launchPhone(String phone) async {
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _launchMaps(String address) async {
+    final uri = Uri.parse('https://maps.google.com/?q=$address');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _showShareOptions(BuildContext context) {
+    // 實作分享功能
+  }
+
+  void _addToContacts() {
+    // 實作加入聯絡人功能
+  }
+
+  void _generateQRCode() {
+    // 實作 QR Code 生成功能
   }
 }
