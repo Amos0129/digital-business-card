@@ -1,6 +1,6 @@
 class AppConstants {
   // API相關
-  static const String baseUrl = 'http://192.168.205.54:5566';
+  static const String baseUrl = 'http://192.168.0.170:5566';
   static const String apiPrefix = '/api';
   
   // 本地儲存Key
