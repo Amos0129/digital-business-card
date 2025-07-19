@@ -9,6 +9,7 @@ import '../../widgets/common/app_text_field.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/card/card_preview.dart';
+import '../../widgets/common/ios_buttons.dart';
 import '../../models/card.dart';
 import '../../core/theme.dart';
 import '../../core/constants.dart';
@@ -693,7 +694,7 @@ class _EditCardScreenState extends State<EditCardScreen> with TickerProviderStat
             ),
             const SizedBox(height: 16),
             _buildSocialMediaOption(
-              icon: CupertinoIcons.logo_facebook,
+              icon: Icons.facebook,
               title: 'Facebook',
               isEnabled: _facebook,
               controller: _facebookUrlController,
@@ -826,12 +827,12 @@ class _EditCardScreenState extends State<EditCardScreen> with TickerProviderStat
             },
           ),
           const SizedBox(height: 24),
-          IOSPrimaryButton(
-            text: widget.card == null ? '建立名片' : '更新名片',
-            onPressed: _saveCard,
-            isLoading: _isLoading,
-            icon: Icon(widget.card == null ? CupertinoIcons.add : CupertinoIcons.checkmark),
-          ),
+          AppButton(
+  text: widget.card == null ? '建立名片' : '更新名片',
+  onPressed: _saveCard,
+  isLoading: _isLoading,
+  icon: widget.card == null ? CupertinoIcons.add : CupertinoIcons.checkmark,
+  ),
         ],
       ),
     );

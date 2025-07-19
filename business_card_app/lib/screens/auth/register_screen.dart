@@ -8,6 +8,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -359,7 +360,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                     : IOSPrimaryButton(
                         text: '建立帳號',
                         onPressed: _register,
-                        icon: const Icon(CupertinoIcons.checkmark),
+                        icon: CupertinoIcons.checkmark,
                       ),
               ],
             ),

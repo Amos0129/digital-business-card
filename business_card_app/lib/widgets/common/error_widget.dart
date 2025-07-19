@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../../core/theme.dart';
 import 'app_button.dart';
+import '../../widgets/common/app_button.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class AppErrorWidget extends StatelessWidget {
   final String? title;
@@ -72,7 +74,7 @@ class AppErrorWidget extends StatelessWidget {
                 onPressed: onRetry,
                 style: IOSButtonStyle.filled,
                 size: IOSButtonSize.medium,
-                icon: const Icon(CupertinoIcons.refresh),
+                icon: CupertinoIcons.refresh,
               ),
             ],
           ],
@@ -125,7 +127,6 @@ class AppErrorWidget extends StatelessWidget {
                 text: buttonText ?? '重試',
                 onPressed: onRetry,
                 style: IOSButtonStyle.tinted,
-                width: double.infinity,
               ),
             ],
           ],

@@ -8,6 +8,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -304,7 +305,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     : IOSPrimaryButton(
                         text: '登入',
                         onPressed: _login,
-                        icon: const Icon(CupertinoIcons.arrow_right),
+                        icon: CupertinoIcons.arrow_right,
                       ),
               ],
             ),
@@ -359,7 +360,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             onPressed: () {
               Navigator.pushNamed(context, AppRoutes.register);
             },
-            icon: const Icon(CupertinoIcons.person_add),
+            icon: CupertinoIcons.person_add,
           ),
           
           const SizedBox(height: 40),
@@ -481,7 +482,7 @@ class _BiometricLoginButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
         ),
         child: const Icon(
-          CupertinoIcons.faceid,
+          CupertinoIcons.person_crop_circle_badge_checkmark,
           color: AppTheme.primaryColor,
           size: 30,
         ),

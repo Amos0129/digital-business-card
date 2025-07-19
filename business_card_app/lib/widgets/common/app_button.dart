@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../../core/theme.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class BottomNavBar extends StatefulWidget {
   final int currentIndex;

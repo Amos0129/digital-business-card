@@ -13,6 +13,7 @@ class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? label;
   final String? placeholder;
+  final String? hintText; // Added hintText parameter
   final String? helperText;
   final bool obscureText;
   final TextInputType? keyboardType;
@@ -43,6 +44,7 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.label,
     this.placeholder,
+    this.hintText, // Added hintText parameter
     this.helperText,
     this.obscureText = false,
     this.keyboardType,
@@ -274,6 +276,9 @@ class _AppTextFieldState extends State<AppTextField> with TickerProviderStateMix
   }
 
   Widget _buildTextField({bool showBorder = true}) {
+    // Use hintText if provided, otherwise fall back to placeholder
+    final String? displayHint = widget.hintText ?? widget.placeholder;
+    
     return TextField(
       controller: widget.controller,
       focusNode: _focusNode,
@@ -297,22 +302,22 @@ class _AppTextFieldState extends State<AppTextField> with TickerProviderStateMix
         fontFamily: '.SF Pro Text',
       ),
       decoration: InputDecoration(
-        hintText: widget.placeholder,
+        hintText: displayHint,
         prefixIcon: widget.prefix,
         suffixIcon: _buildSuffixIcon(),
         filled: false,
         contentPadding: widget.padding ?? 
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: showBorder ? InputBorder.none : UnderlineInputBorder(
+        border: showBorder ? InputBorder.none : const UnderlineInputBorder(
           borderSide: BorderSide.none,
         ),
-        enabledBorder: showBorder ? InputBorder.none : UnderlineInputBorder(
+        enabledBorder: showBorder ? InputBorder.none : const UnderlineInputBorder(
           borderSide: BorderSide.none,
         ),
-        focusedBorder: showBorder ? InputBorder.none : UnderlineInputBorder(
+        focusedBorder: showBorder ? InputBorder.none : const UnderlineInputBorder(
           borderSide: BorderSide.none,
         ),
-        errorBorder: showBorder ? InputBorder.none : UnderlineInputBorder(
+        errorBorder: showBorder ? InputBorder.none : const UnderlineInputBorder(
           borderSide: BorderSide.none,
         ),
         hintStyle: const TextStyle(
@@ -395,6 +400,7 @@ class IOSFormField extends FormField<String> {
     String? initialValue,
     String? label,
     String? placeholder,
+    String? hintText, // Added hintText parameter
     bool obscureText = false,
     TextInputType? keyboardType,
     TextInputAction? textInputAction,
@@ -426,6 +432,7 @@ class IOSFormField extends FormField<String> {
         focusNode: focusNode,
         label: label,
         placeholder: placeholder,
+        hintText: hintText, // Pass hintText parameter
         obscureText: obscureText,
         keyboardType: keyboardType,
         textInputAction: textInputAction,

@@ -8,6 +8,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override

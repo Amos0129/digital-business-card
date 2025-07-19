@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_text_field.dart';
 import '../../widgets/common/loading_widget.dart';
+import '../../widgets/common/ios_buttons.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   @override
