@@ -8,6 +8,8 @@ import '../../widgets/common/loading_widget.dart';
 import '../../core/constants.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -34,18 +36,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.register(_emailController.text, _passwordController.text);
+      final success = await authProvider.register(_emailController.text, _passwordController.text);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('註冊成功！請登入')),
-      );
-      Navigator.pop(context);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('註冊成功！請登入')),
+        );
+        Navigator.pop(context);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.errorMessage ?? '註冊失敗')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('註冊失敗: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('註冊失敗: ${e.toString()}')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -53,12 +65,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('註冊'),
+        title: const Text('註冊'),
         elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -69,18 +81,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   size: 80,
                   color: Theme.of(context).primaryColor,
                 ),
-                SizedBox(height: 40),
-                Text(
+                const SizedBox(height: 40),
+                const Text(
                   '建立新帳號',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 AppTextField(
                   controller: _emailController,
                   label: '電子郵件',
+                  hintText: '請輸入電子郵件',
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請輸入電子郵件';
@@ -88,10 +101,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 AppTextField(
                   controller: _passwordController,
                   label: '密碼',
+                  hintText: '請輸入密碼',
                   obscureText: true,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請輸入密碼';
@@ -99,10 +113,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 AppTextField(
                   controller: _confirmPasswordController,
                   label: '確認密碼',
+                  hintText: '請再次輸入密碼',
                   obscureText: true,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請確認密碼';
@@ -110,9 +125,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 _isLoading
-                    ? LoadingWidget()
+                    ? const LoadingWidget()
                     : AppButton(
                         text: '註冊',
                         onPressed: _register,

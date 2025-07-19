@@ -1,24 +1,17 @@
 package com.emfabro.template.api;
 
 import java.util.List;
+import java.util.Map;
 
 import com.emfabro.template.domain.entity.Group;
 import com.emfabro.template.dto.CardDetailDto;
 import com.emfabro.template.service.CardGroupService;
 import com.emfabro.template.service.GroupService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/group")
+@RequestMapping("/api/group")  // 確保路徑一致
 @RequiredArgsConstructor
 public class GroupApi {
 
@@ -32,14 +25,16 @@ public class GroupApi {
 
     @PostMapping("/create")
     public Group create(@RequestAttribute("userId") Integer userId,
-            @RequestParam String name) {
+                        @RequestBody Map<String, String> request) {  // 修正：接收 JSON body
+        String name = request.get("name");
         return groupService.createGroup(userId, name);
     }
 
     @PutMapping("/rename/{groupId}")
     public Group rename(@PathVariable Integer groupId,
-            @RequestParam String newName,
-            @RequestAttribute("userId") Integer userId) {
+                        @RequestBody Map<String, String> request,  // 修正：接收 JSON body
+                        @RequestAttribute("userId") Integer userId) {
+        String newName = request.get("name");
         return groupService.renameGroup(groupId, newName, userId);
     }
 
@@ -50,7 +45,7 @@ public class GroupApi {
 
     @DeleteMapping("/{groupId}")
     public void delete(@PathVariable Integer groupId,
-            @RequestAttribute("userId") Integer userId) {
+                       @RequestAttribute("userId") Integer userId) {
         groupService.deleteGroup(groupId, userId);
     }
 }

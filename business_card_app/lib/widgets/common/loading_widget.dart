@@ -184,7 +184,7 @@ class RefreshLoading extends StatelessWidget {
               message!,
               style: const TextStyle(
                 fontSize: 12,
-                color: AppTheme.hintColor,
+                color: Colors.grey, // 修正：直接使用 Colors.grey 而不是 AppTheme.hintColor
               ),
             ),
           ],
@@ -193,23 +193,3 @@ class RefreshLoading extends StatelessWidget {
     );
   }
 }
-
-// 使用範例：
-// 1. 基本載入
-// LoadingWidget()
-
-// 2. 帶訊息的載入
-// LoadingWidget(message: "正在處理...")
-
-// 3. 全螢幕載入
-// FullScreenLoading(message: "請稍候...")
-
-// 4. 載入對話框
-// await LoadingDialog.show(context, message: "儲存中...");
-// LoadingDialog.hide(context);
-
-// 5. 按鈕內載入
-// ElevatedButton(
-//   child: isLoading ? ButtonLoading() : Text("登入"),
-//   onPressed: isLoading ? null : _login,
-// )

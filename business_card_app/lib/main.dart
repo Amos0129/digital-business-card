@@ -38,6 +38,12 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         home: SplashScreen(),
         debugShowCheckedModeBanner: false,
+        // 確保所有 Material Design 組件都有正確的上下文
+        builder: (context, child) {
+          return Material(
+            child: child ?? Container(),
+          );
+        },
         routes: {
           AppRoutes.login: (context) => LoginScreen(),
           AppRoutes.register: (context) => RegisterScreen(),

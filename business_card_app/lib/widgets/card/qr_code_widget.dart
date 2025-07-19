@@ -178,7 +178,7 @@ class QRCodeDialog extends StatelessWidget {
                 description!,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppTheme.hintColor,
+                  color: Colors.grey, // 修正：直接使用 Colors.grey
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -326,7 +326,7 @@ class QRCodeCard extends StatelessWidget {
                   subtitle!,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: AppTheme.hintColor,
+                    color: Colors.grey, // 修正：直接使用 Colors.grey
                   ),
                   textAlign: TextAlign.center,
                 ),

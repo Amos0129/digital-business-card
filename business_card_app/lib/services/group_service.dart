@@ -1,4 +1,4 @@
-// lib/services/group_service.dart
+// 修正前端 group_service.dart
 import '../models/group.dart';
 import '../models/card.dart';
 import '../core/api_client.dart';
@@ -25,9 +25,9 @@ class GroupService {
     return [];
   }
 
-  // 建立群組
+  // 建立群組 - 修正：使用 JSON body
   Future<CardGroup> createGroup(String groupName) async {
-    final data = GroupRequest(name: groupName).toJson();
+    final data = {'name': groupName};  // 包裝成 JSON 物件
     final response = await ApiClient.post(
       ApiEndpoints.createGroup, 
       data, 
@@ -36,9 +36,9 @@ class GroupService {
     return CardGroup.fromJson(response);
   }
 
-  // 重新命名群組
+  // 重新命名群組 - 修正：使用 JSON body
   Future<CardGroup> renameGroup(int groupId, String newName) async {
-    final data = {'name': newName};
+    final data = {'name': newName};  // 包裝成 JSON 物件
     final response = await ApiClient.put(
       ApiEndpoints.renameGroup(groupId), 
       data, 
@@ -68,12 +68,12 @@ class GroupService {
     return [];
   }
 
-  // 將名片加入群組
+  // 將名片加入群組 - 修正：使用 JSON body
   Future<void> addCardToGroup(int cardId, int groupId) async {
-    final data = GroupOperationRequest(
-      cardId: cardId,
-      groupId: groupId,
-    ).toJson();
+    final data = {
+      'cardId': cardId,
+      'groupId': groupId,
+    };
     
     await ApiClient.post(
       ApiEndpoints.addCardToGroup, 
@@ -82,21 +82,21 @@ class GroupService {
     );
   }
 
-  // 將名片從群組移除
+  // 將名片從群組移除 - 修正：使用 JSON body
   Future<void> removeCardFromGroup(int cardId, int groupId) async {
-    final data = GroupOperationRequest(
-      cardId: cardId,
-      groupId: groupId,
-    ).toJson();
+    final data = {
+      'cardId': cardId,
+      'groupId': groupId,
+    };
     
-    await ApiClient.post(
+    await ApiClient.post(  // 改為 POST
       ApiEndpoints.removeCardFromGroup, 
       data, 
       needAuth: true,
     );
   }
 
-  // 變更名片的群組
+  // 變更名片的群組 - 修正：使用 JSON body  
   Future<void> changeCardGroup(int cardId, int newGroupId) async {
     final data = {
       'cardId': cardId,
@@ -110,7 +110,7 @@ class GroupService {
     );
   }
 
-  // 將名片加入預設群組
+  // 將名片加入預設群組 - 修正：使用 JSON body
   Future<void> addCardToDefaultGroup(int cardId) async {
     final data = {'cardId': cardId};
     await ApiClient.post(

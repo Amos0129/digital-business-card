@@ -8,6 +8,8 @@ import '../../widgets/common/loading_widget.dart';
 import '../../core/constants.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -32,15 +34,25 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(_emailController.text, _passwordController.text);
+      final success = await authProvider.login(_emailController.text, _passwordController.text);
       
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (success && mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.errorMessage ?? '登入失敗')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('登入失敗: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('登入失敗: ${e.toString()}')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -49,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -60,18 +72,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   size: 80,
                   color: Theme.of(context).primaryColor,
                 ),
-                SizedBox(height: 40),
-                Text(
+                const SizedBox(height: 40),
+                const Text(
                   '登入',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 AppTextField(
                   controller: _emailController,
                   label: '電子郵件',
+                  hintText: '請輸入電子郵件',
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請輸入電子郵件';
@@ -79,10 +92,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 AppTextField(
                   controller: _passwordController,
                   label: '密碼',
+                  hintText: '請輸入密碼',
                   obscureText: true,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請輸入密碼';
@@ -90,25 +104,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 _isLoading
-                    ? LoadingWidget()
+                    ? const LoadingWidget()
                     : AppButton(
                         text: '登入',
                         onPressed: _login,
                       ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.register);
                   },
-                  child: Text('還沒有帳號？註冊新帳號'),
+                  child: const Text('還沒有帳號？註冊新帳號'),
                 ),
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, AppRoutes.forgotPassword);
                   },
-                  child: Text('忘記密碼？'),
+                  child: const Text('忘記密碼？'),
                 ),
               ],
             ),

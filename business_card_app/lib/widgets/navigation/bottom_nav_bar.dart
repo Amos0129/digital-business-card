@@ -80,7 +80,7 @@ class BottomNavBar extends StatelessWidget {
                   isSelected: isSelected,
                   onTap: () => onTap(index),
                   selectedColor: selectedItemColor ?? AppTheme.primaryColor,
-                  unselectedColor: unselectedItemColor ?? AppTheme.hintColor,
+                  unselectedColor: unselectedItemColor ?? Colors.grey, // 修正：直接使用 Colors.grey
                 ),
               );
             }),
@@ -239,7 +239,7 @@ class BadgedBottomNavBar extends StatelessWidget {
                   isSelected: isSelected,
                   onTap: () => onTap(index),
                   selectedColor: selectedItemColor ?? AppTheme.primaryColor,
-                  unselectedColor: unselectedItemColor ?? AppTheme.hintColor,
+                  unselectedColor: unselectedItemColor ?? Colors.grey, // 修正：直接使用 Colors.grey
                 ),
               );
             }),
@@ -259,7 +259,7 @@ class BadgedBottomNavBar extends StatelessWidget {
         color: Colors.red,
         borderRadius: BorderRadius.circular(10),
       ),
-      constraints: const BoxConstraints(
+      constraints: const BoxConstraints( // 修正：移除 minWidth，改用 constraints
         minWidth: 16,
         minHeight: 16,
       ),
@@ -390,46 +390,3 @@ class FloatingBottomNavBar extends StatelessWidget {
     );
   }
 }
-
-// 使用範例：
-
-// 1. 基本底部導航
-// BottomNavBar(
-//   currentIndex: _currentIndex,
-//   onTap: (index) => setState(() => _currentIndex = index),
-// )
-
-// 2. 自訂樣式底部導航
-// BottomNavBar(
-//   currentIndex: _currentIndex,
-//   onTap: _onTabChanged,
-//   backgroundColor: Colors.black,
-//   selectedItemColor: Colors.blue,
-//   unselectedItemColor: Colors.grey,
-// )
-
-// 3. 帶徽章的底部導航
-// BadgedBottomNavBar(
-//   currentIndex: _currentIndex,
-//   onTap: _onTabChanged,
-//   badgeCounts: {1: 5, 2: 2}, // 名片有5個通知，群組有2個通知
-// )
-
-// 4. 浮動式底部導航
-// FloatingBottomNavBar(
-//   currentIndex: _currentIndex,
-//   onTap: _onTabChanged,
-//   margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-// )
-
-// 5. 自訂項目
-// final customItems = [
-//   BottomNavItem(icon: Icons.dashboard, label: '儀表板'),
-//   BottomNavItem(icon: Icons.analytics, label: '分析'),
-//   BottomNavItem(icon: Icons.settings, label: '設定'),
-// ];
-// BottomNavBar(
-//   currentIndex: _currentIndex,
-//   onTap: _onTabChanged,
-//   customItems: customItems,
-// )

@@ -87,73 +87,76 @@ class _AppTextFieldState extends State<AppTextField> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (widget.label != null) ...[
-          Text(
-            widget.label!,
+    return Material(
+      color: Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.label != null) ...[
+            Text(
+              widget.label!,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppTheme.textColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          TextFormField(
+            controller: widget.controller,
+            focusNode: _focusNode,
+            obscureText: _obscureText,
+            keyboardType: widget.keyboardType,
+            textInputAction: widget.textInputAction,
+            validator: widget.validator,
+            onChanged: widget.onChanged,
+            onFieldSubmitted: widget.onSubmitted,
+            onTap: widget.onTap,
+            enabled: widget.enabled,
+            readOnly: widget.readOnly,
+            maxLines: widget.maxLines,
+            minLines: widget.minLines,
+            maxLength: widget.maxLength,
+            inputFormatters: widget.inputFormatters,
+            autofocus: widget.autofocus,
+            textCapitalization: widget.textCapitalization,
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              helperText: widget.helperText,
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: _buildSuffixIcon(),
+              filled: true,
+              fillColor: widget.fillColor ?? AppTheme.cardColor,
+              contentPadding: widget.contentPadding ?? 
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              border: _buildBorder(theme.dividerColor),
+              enabledBorder: _buildBorder(widget.borderColor ?? Colors.grey.shade300),
+              focusedBorder: _buildBorder(widget.borderColor ?? theme.primaryColor),
+              errorBorder: _buildBorder(AppTheme.errorColor),
+              focusedErrorBorder: _buildBorder(AppTheme.errorColor),
+              disabledBorder: _buildBorder(Colors.grey.shade200),
+              hintStyle: const TextStyle(color: Colors.grey),
+              helperStyle: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+              errorStyle: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.errorColor,
+              ),
+              counterStyle: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
             style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
               color: AppTheme.textColor,
             ),
           ),
-          const SizedBox(height: 8),
         ],
-        TextFormField(
-          controller: widget.controller,
-          focusNode: _focusNode,
-          obscureText: _obscureText,
-          keyboardType: widget.keyboardType,
-          textInputAction: widget.textInputAction,
-          validator: widget.validator,
-          onChanged: widget.onChanged,
-          onFieldSubmitted: widget.onSubmitted,
-          onTap: widget.onTap,
-          enabled: widget.enabled,
-          readOnly: widget.readOnly,
-          maxLines: widget.maxLines,
-          minLines: widget.minLines,
-          maxLength: widget.maxLength,
-          inputFormatters: widget.inputFormatters,
-          autofocus: widget.autofocus,
-          textCapitalization: widget.textCapitalization,
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            helperText: widget.helperText,
-            prefixIcon: widget.prefixIcon,
-            suffixIcon: _buildSuffixIcon(),
-            filled: true,
-            fillColor: widget.fillColor ?? AppTheme.cardColor,
-            contentPadding: widget.contentPadding ?? 
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: _buildBorder(theme.dividerColor),
-            enabledBorder: _buildBorder(widget.borderColor ?? Colors.grey.shade300),
-            focusedBorder: _buildBorder(widget.borderColor ?? theme.primaryColor),
-            errorBorder: _buildBorder(AppTheme.errorColor),
-            focusedErrorBorder: _buildBorder(AppTheme.errorColor),
-            disabledBorder: _buildBorder(Colors.grey.shade200),
-            hintStyle: const TextStyle(color: AppTheme.hintColor),
-            helperStyle: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.hintColor,
-            ),
-            errorStyle: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.errorColor,
-            ),
-            counterStyle: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.hintColor,
-            ),
-          ),
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppTheme.textColor,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -162,7 +165,7 @@ class _AppTextFieldState extends State<AppTextField> {
       return IconButton(
         icon: Icon(
           _obscureText ? Icons.visibility_off : Icons.visibility,
-          color: AppTheme.hintColor,
+          color: Colors.grey,
         ),
         onPressed: () {
           setState(() {

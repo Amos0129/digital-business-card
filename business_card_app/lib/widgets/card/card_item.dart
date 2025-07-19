@@ -92,7 +92,7 @@ class CardItem extends StatelessWidget {
                             card.company!,
                             style: const TextStyle(
                               fontSize: 14,
-                              color: AppTheme.hintColor,
+                              color: Colors.grey, // 修正：直接使用 Colors.grey
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -103,7 +103,7 @@ class CardItem extends StatelessWidget {
                             card.position!,
                             style: const TextStyle(
                               fontSize: 12,
-                              color: AppTheme.hintColor,
+                              color: Colors.grey, // 修正：直接使用 Colors.grey
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -252,7 +252,7 @@ class CardItem extends StatelessWidget {
           Icon(
             icon,
             size: 16,
-            color: AppTheme.hintColor,
+            color: Colors.grey, // 修正：直接使用 Colors.grey
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -279,7 +279,7 @@ class CardItem extends StatelessWidget {
         const Icon(
           Icons.link,
           size: 16,
-          color: AppTheme.hintColor,
+          color: Colors.grey, // 修正：直接使用 Colors.grey
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -308,7 +308,7 @@ class CardItem extends StatelessWidget {
             '+${socialList.length - 4}',
             style: const TextStyle(
               fontSize: 12,
-              color: AppTheme.hintColor,
+              color: Colors.grey, // 修正：直接使用 Colors.grey
             ),
           ),
       ],

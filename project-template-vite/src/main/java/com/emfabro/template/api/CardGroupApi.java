@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/card-group")
@@ -19,36 +20,41 @@ public class CardGroupApi {
 
     @GetMapping("/user-group-of-card")
     public CardGroupDto getUserGroupOfCard(@RequestAttribute("userId") Integer userId,
-            @RequestParam Integer cardId) {
+                                           @RequestParam Integer cardId) {
         return cardGroupService.getGroupOfCardForUser(userId, cardId);
     }
 
-    @PutMapping("/change")
-    public void changeCardGroup(@RequestParam Integer cardId,
-            @RequestParam Integer groupId,
-            @RequestAttribute("userId") Integer userId) {
+    @PostMapping("/change")  // 修正：改為 POST 並接收 JSON
+    public void changeCardGroup(@RequestBody Map<String, Integer> request,
+                                @RequestAttribute("userId") Integer userId) {
+        Integer cardId = request.get("cardId");
+        Integer groupId = request.get("groupId");
         cardGroupService.changeCardGroup(cardId, groupId, userId);
     }
 
     @PostMapping("/add-to-default")
-    public void addToDefaultGroup(@RequestParam Integer cardId,
-            @RequestAttribute("userId") Integer userId) {
+    public void addToDefaultGroup(@RequestBody Map<String, Integer> request,
+                                  @RequestAttribute("userId") Integer userId) {
+        Integer cardId = request.get("cardId");
         cardGroupService.addCardToDefaultGroup(cardId, userId);
     }
 
     @PostMapping("/add")
-    public CardGroup addCardToGroup(@RequestParam Integer cardId,
-            @RequestParam Integer groupId,
-            @RequestAttribute("userId") Integer userId) {
+    public CardGroup addCardToGroup(@RequestBody Map<String, Integer> request,
+                                    @RequestAttribute("userId") Integer userId) {
+        Integer cardId = request.get("cardId");
+        Integer groupId = request.get("groupId");
         return cardGroupService.addCardToGroup(cardId, groupId, userId);
     }
 
-    @DeleteMapping("/remove")
-    public void removeCardFromGroup(@RequestParam Integer cardId,
-            @RequestParam Integer groupId,
-            @RequestAttribute("userId") Integer userId) {
+    @PostMapping("/remove")  // 修正：改為 POST 並接收 JSON
+    public void removeCardFromGroup(@RequestBody Map<String, Integer> request,
+                                    @RequestAttribute("userId") Integer userId) {
+        Integer cardId = request.get("cardId");
+        Integer groupId = request.get("groupId");
         cardGroupService.removeCardFromGroup(cardId, groupId, userId);
     }
+
     @GetMapping("/by-card/{cardId}")
     public List<CardGroup> getGroupsByCard(@PathVariable Integer cardId) {
         return cardGroupService.getGroupsByCard(cardId);
@@ -57,8 +63,8 @@ public class CardGroupApi {
     @GetMapping("/by-group/{groupId}")
     public List<CardDetailDto> getCardsByGroup(@PathVariable Integer groupId) {
         return cardGroupService.getCardsByGroup(groupId).stream()
-                               .map(cg -> CardDetailDto.fromEntity(cg.getCard()))
-                               .toList();
+                .map(cg -> CardDetailDto.fromEntity(cg.getCard()))
+                .toList();
     }
 
     @GetMapping("/by-user")

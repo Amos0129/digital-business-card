@@ -113,12 +113,15 @@ class _HomeScreenState extends State<HomeScreen> {
               // 已在首頁
               break;
             case 1:
-              Navigator.pushNamed(context, AppRoutes.groups);
+              Navigator.pushNamed(context, AppRoutes.cards);
               break;
             case 2:
-              Navigator.pushNamed(context, AppRoutes.search);
+              Navigator.pushNamed(context, AppRoutes.groups);
               break;
             case 3:
+              Navigator.pushNamed(context, AppRoutes.search);
+              break;
+            case 4:
               Navigator.pushNamed(context, AppRoutes.profile);
               break;
           }

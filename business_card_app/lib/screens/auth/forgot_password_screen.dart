@@ -29,18 +29,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.forgotPassword(_emailController.text);
+      final success = await authProvider.forgotPassword(_emailController.text);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('重設密碼連結已發送到您的信箱')),
-      );
-      Navigator.pop(context);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('重設密碼連結已發送到您的信箱')),
+        );
+        Navigator.pop(context);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(authProvider.errorMessage ?? '發送失敗')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('發送失敗: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('發送失敗: ${e.toString()}')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -85,6 +95,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 AppTextField(
                   controller: _emailController,
                   label: '電子郵件',
+                  hintText: '請輸入電子郵件',
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value?.isEmpty ?? true) return '請輸入電子郵件';
