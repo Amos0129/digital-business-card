@@ -51,9 +51,9 @@ class CardDetailScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.cardRadius,
-        boxShadow: AppTheme.cardShadow,
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(IOSConstants.radiusLarge),
+        boxShadow: AppTheme.iosCardShadow,
       ),
       child: Column(
         children: [
@@ -62,7 +62,7 @@ class CardDetailScreen extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.1),
+              color: AppTheme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: card.avatarUrl != null
@@ -82,11 +82,7 @@ class CardDetailScreen extends StatelessWidget {
           // 姓名
           Text(
             card.name,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+            style: AppTheme.largeTitle.copyWith(fontSize: 24),
           ),
           
           // 公司職位
@@ -96,9 +92,8 @@ class CardDetailScreen extends StatelessWidget {
               [card.position, card.company]
                   .where((e) => e != null && e.isNotEmpty)
                   .join(' • '),
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppTheme.textSecondary,
+              style: AppTheme.subheadline.copyWith(
+                color: AppTheme.secondaryTextColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -112,7 +107,7 @@ class CardDetailScreen extends StatelessWidget {
     return Icon(
       CupertinoIcons.person_fill,
       size: 50,
-      color: AppTheme.primary.withOpacity(0.6),
+      color: AppTheme.primaryColor.withOpacity(0.6),
     );
   }
 
@@ -150,9 +145,9 @@ class CardDetailScreen extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.cardRadius,
-        boxShadow: AppTheme.cardShadow,
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(IOSConstants.radiusLarge),
+        boxShadow: AppTheme.iosCardShadow,
       ),
       child: Column(children: items),
     );
@@ -169,7 +164,7 @@ class CardDetailScreen extends StatelessWidget {
       onPressed: onTap,
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.primary),
+          Icon(icon, color: AppTheme.primaryColor),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -177,27 +172,23 @@ class CardDetailScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppTheme.textSecondary,
+                  style: AppTheme.footnote.copyWith(
+                    color: AppTheme.secondaryTextColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.textPrimary,
-                  ),
+                  style: AppTheme.body,
                 ),
               ],
             ),
           ),
           if (onTap != null)
-            const Icon(
+            Icon(
               CupertinoIcons.chevron_right,
               size: 16,
-              color: AppTheme.textTertiary,
+              color: AppTheme.tertiaryTextColor,
             ),
         ],
       ),
@@ -247,9 +238,9 @@ class CardDetailScreen extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: AppTheme.cardRadius,
-        boxShadow: AppTheme.cardShadow,
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(IOSConstants.radiusLarge),
+        boxShadow: AppTheme.iosCardShadow,
       ),
       child: Column(
         children: socials
@@ -286,18 +277,12 @@ class CardDetailScreen extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppTheme.textPrimary,
-              ),
-            ),
+            child: Text(name, style: AppTheme.body),
           ),
-          const Icon(
+          Icon(
             CupertinoIcons.chevron_right,
             size: 16,
-            color: AppTheme.textTertiary,
+            color: AppTheme.tertiaryTextColor,
           ),
         ],
       ),
@@ -319,9 +304,9 @@ class CardDetailScreen extends StatelessWidget {
             child: CupertinoButton(
               color: CupertinoColors.systemGrey5,
               onPressed: () => _generateQRCode(),
-              child: const Text(
+              child: Text(
                 '生成 QR Code',
-                style: TextStyle(color: AppTheme.textPrimary),
+                style: TextStyle(color: AppTheme.textColor),
               ),
             ),
           ),
