@@ -1,9 +1,10 @@
-// lib/screens/auth/login_screen.dart
+// lib/screens/auth/login_screen.dart - 修正版本
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,6 +15,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +70,20 @@ class _LoginScreenState extends State<LoginScreen> {
               // 表單
               _buildForm(),
               
+              const SizedBox(height: 16),
+              
+              // 忘記密碼連結
+              CupertinoButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  CupertinoPageRoute(builder: (_) => ForgotPasswordScreen()),
+                ),
+                child: Text(
+                  '忘記密碼？',
+                  style: TextStyle(color: AppTheme.primaryColor),
+                ),
+              ),
+              
               const Spacer(),
               
               // 註冊按鈕
@@ -89,6 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
           controller: _emailController,
           placeholder: 'Email',
           icon: CupertinoIcons.mail,
+          keyboardType: TextInputType.emailAddress,
         ),
         
         const SizedBox(height: 16),
@@ -120,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String placeholder,
     required IconData icon,
     bool obscureText = false,
+    TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -131,6 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
         controller: controller,
         placeholder: placeholder,
         obscureText: obscureText,
+        keyboardType: keyboardType,
         prefix: Padding(
           padding: const EdgeInsets.only(left: 16),
           child: Icon(icon, color: AppTheme.secondaryTextColor),
@@ -142,23 +167,44 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() async {
+    // 基本驗證
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       _showError('請填寫完整資訊');
       return;
     }
 
+    // 簡單的 Email 格式驗證
+    if (!RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_emailController.text)) {
+      _showError('請輸入有效的電子郵件格式');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final success = await authProvider.login(
-      _emailController.text,
-      _passwordController.text,
-    );
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-    setState(() => _isLoading = false);
-
-    if (!success) {
-      _showError('登入失敗，請檢查帳號密碼');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        
+        if (success) {
+          print('Login successful, auth state will trigger navigation'); // 調試用
+          // 不需要手動導航，AuthProvider 狀態變化會自動觸發 app.dart 中的 Consumer 重建
+        } else {
+          // 顯示 AuthProvider 中的錯誤訊息
+          final errorMessage = authProvider.errorMessage ?? '登入失敗，請檢查帳號密碼';
+          _showError(errorMessage);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showError('登入時發生錯誤：$e');
+      }
     }
   }
 
@@ -166,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
     showCupertinoDialog(
       context: context,
       builder: (_) => CupertinoAlertDialog(
-        title: const Text('錯誤'),
+        title: const Text('登入失敗'),
         content: Text(message),
         actions: [
           CupertinoDialogAction(

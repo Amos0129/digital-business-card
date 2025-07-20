@@ -1,9 +1,10 @@
-// lib/screens/main_screen.dart
+// lib/screens/main_screen.dart - 修正版本
 import 'package:flutter/cupertino.dart';
+import 'home/home_screen.dart';
 import 'cards/my_cards_screen.dart';
 import 'cards/public_cards_screen.dart';
 import 'groups/groups_screen.dart';
-import 'profile/profile_screen.dart';
+import 'home/profile_screen.dart'; // 使用 home/profile_screen.dart
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -17,6 +18,11 @@ class MainScreen extends StatelessWidget {
           top: BorderSide(color: CupertinoColors.separator, width: 0.5),
         ),
         items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.home),
+            activeIcon: Icon(CupertinoIcons.house_fill),
+            label: '首頁',
+          ),
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.person_2),
             activeIcon: Icon(CupertinoIcons.person_2_fill),
@@ -43,17 +49,21 @@ class MainScreen extends StatelessWidget {
         switch (index) {
           case 0:
             return CupertinoTabView(
-              builder: (context) => MyCardsScreen(),
+              builder: (context) => HomeScreen(),
             );
           case 1:
             return CupertinoTabView(
-              builder: (context) => PublicCardsScreen(),
+              builder: (context) => MyCardsScreen(),
             );
           case 2:
             return CupertinoTabView(
-              builder: (context) => const GroupsScreen(),
+              builder: (context) => PublicCardsScreen(),
             );
           case 3:
+            return CupertinoTabView(
+              builder: (context) => const GroupsScreen(),
+            );
+          case 4:
             return CupertinoTabView(
               builder: (context) => const ProfileScreen(),
             );

@@ -1,4 +1,4 @@
-// lib/providers/auth_provider.dart
+// lib/providers/auth_provider.dart - 修正版本
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -41,8 +41,10 @@ class AuthProvider with ChangeNotifier {
             _user = User.fromJson(response);
             _isLoggedIn = true;
             _errorMessage = null;
+            print('Auth check success: User logged in'); // 調試用
           } else {
             await _clearAuthData();
+            print('Auth check failed: Invalid response'); // 調試用
           }
         } catch (e) {
           print('Token 驗證失敗: $e');
@@ -50,6 +52,7 @@ class AuthProvider with ChangeNotifier {
         }
       } else {
         await _clearAuthData();
+        print('Auth check: No token found'); // 調試用
       }
     } catch (e) {
       print('檢查認證狀態錯誤: $e');
@@ -59,7 +62,7 @@ class AuthProvider with ChangeNotifier {
     _setLoading(false);
   }
   
-  // 登入
+  // 登入 - 關鍵修正
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     _errorMessage = null;
@@ -74,11 +77,16 @@ class AuthProvider with ChangeNotifier {
       );
       
       if (response != null) {
+        print('Login response: $response'); // 調試用
+        
+        // 建立 User 物件，確保包含 token
         _user = User.fromJson(response);
         _isLoggedIn = true;
         
         // 儲存到本地
         await _saveAuthData();
+        
+        print('Login success: User=${_user?.name}, LoggedIn=$_isLoggedIn'); // 調試用
         
         _setLoading(false);
         return true;
@@ -143,12 +151,15 @@ class AuthProvider with ChangeNotifier {
     _setLoading(false);
   }
   
-  // 儲存認證資料
+  // 儲存認證資料 - 確保正確儲存 token
   Future<void> _saveAuthData() async {
     if (_user?.token != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.keyJwtToken, _user!.token!);
       await prefs.setString(AppConstants.keyUserData, jsonEncode(_user!.toJson()));
+      print('Auth data saved: token=${_user!.token}'); // 調試用
+    } else {
+      print('Warning: No token to save'); // 調試用
     }
   }
   
@@ -161,12 +172,15 @@ class AuthProvider with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(AppConstants.keyJwtToken);
     await prefs.remove(AppConstants.keyUserData);
+    
+    print('Auth data cleared'); // 調試用
   }
   
-  // 設定載入狀態
+  // 設定載入狀態 - 確保觸發 UI 更新
   void _setLoading(bool loading) {
     if (_isLoading != loading) {
       _isLoading = loading;
+      print('Loading state changed: $_isLoading'); // 調試用
       notifyListeners();
     }
   }
